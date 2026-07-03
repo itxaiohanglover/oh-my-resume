@@ -1,0 +1,105 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesClass{oh-my-resume}[2026/07/01 Oh My Resume class]
+
+\LoadClass[10pt]{article}
+
+\RequirePackage{iftex}
+\ifXeTeX\else
+  \ClassError{oh-my-resume}{Oh My Resume requires XeLaTeX}{Use xelatex or latexmk -xelatex to build this resume.}
+\fi
+
+\RequirePackage[a4paper, nohead, nofoot]{geometry}
+\RequirePackage{fontspec}
+\RequirePackage{xeCJK}
+\RequirePackage{xcolor}
+\RequirePackage{xifthen}
+\RequirePackage{graphicx}
+\RequirePackage{hyperref}
+\RequirePackage{titlesec}
+\RequirePackage{enumitem}
+\RequirePackage[skins]{tcolorbox}
+\RequirePackage{fontawesome5}
+\RequirePackage{calc}
+\RequirePackage{setspace}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=omrLinkColor,
+  linkcolor=omrLinkColor
+}
+\urlstyle{tt}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+% Defaults are intentionally conservative. Themes can override them.
+\definecolor{omrAccent}{RGB}{79,139,255}
+\definecolor{omrTagBg}{RGB}{232,241,255}
+\definecolor{omrTagText}{RGB}{79,139,255}
+\definecolor{omrSectionBg}{RGB}{245,246,248}
+\definecolor{omrSectionRule}{RGB}{30,35,45}
+\definecolor{omrTextMuted}{RGB}{75,85,99}
+\definecolor{omrLinkColor}{RGB}{40,88,160}
+
+\newcommand{\omrPageMarginLeft}{8mm}
+\newcommand{\omrPageMarginRight}{8mm}
+\newcommand{\omrPageMarginTop}{8mm}
+\newcommand{\omrPageMarginBottom}{5mm}
+\newcommand{\omrPhotoWidth}{2.35cm}
+\newcommand{\omrPhotoHeight}{2.75cm}
+\newcommand{\omrHeaderGap}{7mm}
+\newcommand{\omrPhotoRightInset}{0mm}
+\newcommand{\omrSectionBefore}{0.6em}
+\newcommand{\omrSectionAfter}{0.24em}
+\newcommand{\omrBodyFont}{TeX Gyre Termes}
+\newcommand{\omrCJKMainFont}{Songti SC}
+\newcommand{\omrBodyFontSize}{10pt}
+\newcommand{\omrBodyLineHeight}{13pt}
+\newcommand{\omrHOneFontSize}{16pt}
+\newcommand{\omrHOneLineHeight}{19pt}
+\newcommand{\omrSectionFontSize}{11.4pt}
+\newcommand{\omrSectionLineHeight}{14.2pt}
+\newcommand{\omrEntryFontSize}{10pt}
+\newcommand{\omrEntryLineHeight}{13pt}
+\newcommand{\omrHFourFontSize}{10pt}
+\newcommand{\omrHFourLineHeight}{13pt}
+
+\newcommand{\omrApplyLayout}{%
+  \newgeometry{
+    left=\omrPageMarginLeft,
+    right=\omrPageMarginRight,
+    top=\omrPageMarginTop,
+    bottom=\omrPageMarginBottom,
+    nohead,
+    nofoot
+  }%
+}
+
+\newcommand{\omrApplyFonts}{%
+  \IfFontExistsTF{\omrBodyFont}{\setmainfont{\omrBodyFont}}{%
+    \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{}%
+  }%
+  \IfFontExistsTF{\omrCJKMainFont}{\setCJKmainfont{\omrCJKMainFont}}{%
+    \IfFontExistsTF{Noto Serif CJK SC}{\setCJKmainfont{Noto Serif CJK SC}}{%
+      \IfFontExistsTF{Songti SC}{\setCJKmainfont{Songti SC}}{%
+        \IfFontExistsTF{PingFang SC}{\setCJKmainfont{PingFang SC}}{%
+          \IfFontExistsTF{FandolSong-Regular}{\setCJKmainfont{FandolSong-Regular}}{}%
+        }%
+      }%
+    }%
+  }%
+}
+
+\newcommand{\omrApplyBaseStyles}{%
+  \omrApplyLayout
+  \omrApplyFonts
+  \fontsize{\omrBodyFontSize}{\omrBodyLineHeight}\selectfont
+  \setlist{noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt}
+  \setlist[itemize]{topsep=1pt, partopsep=0pt, parsep=1.2pt, itemsep=1.2pt, leftmargin=1.4pc}
+  \setlist[enumerate]{topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt, leftmargin=1.5pc}
+  \titleformat{\section}{\normalsize\bfseries\raggedright}{}{0em}{}
+  \titlespacing*{\section}{0cm}{*0.9}{*0.25}
+  \titleformat{\subsection}{\normalsize\bfseries\raggedright}{}{0em}{}
+  \titlespacing*{\subsection}{0cm}{*0.6}{*0.1}
+}
+
+\endinput

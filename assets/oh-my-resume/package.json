@@ -1,0 +1,28 @@
+{
+  "name": "oh-my-resume",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Markdown-first LaTeX resume template for clean, themeable PDF resumes.",
+  "license": "MIT",
+  "bin": {
+    "oh-my-resume": "scripts/cli.js",
+    "omr": "scripts/cli.js"
+  },
+  "scripts": {
+    "build:tex": "node scripts/cli.js build examples/resume.md --out build/resume.tex",
+    "build": "npm run build:tex",
+    "debug": "node scripts/cli.js debug examples/resume.md",
+    "doctor": "node scripts/cli.js doctor",
+    "check": "node --check scripts/build.js && node --check scripts/cli.js && node scripts/cli.js build examples/resume.md --out build/resume.tex"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "examples",
+    "scripts",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

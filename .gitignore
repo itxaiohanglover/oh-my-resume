@@ -1,0 +1,8 @@
+build/*
+dist/*
+assets/oh-my-resume/build/
+assets/oh-my-resume/dist/
+assets/oh-my-resume/resume.pdf
+assets/oh-my-resume/examples/resume.pdf
+private/
+.DS_Store

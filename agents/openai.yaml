@@ -1,0 +1,7 @@
+interface:
+  display_name: "Oh My Resume"
+  short_description: "Skill-first Markdown resume PDF generator."
+  brand_color: "#3B82F6"
+  default_prompt: "Use $oh-my-resume to create a polished Markdown resume and export it to PDF."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+\newcommand{\omrDatedEntry}[2]{\subsection*{{\fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont #1 \hfill {\color{omrTextMuted}#2}}}}
+\newcommand{\datedsubsection}[2]{\omrDatedEntry{#1}{#2}}
+\newcommand{\tightdate}[1]{{\xeCJKsetup{CJKecglue={\hskip 0pt}}#1}}
+\newcommand{\omrFieldLine}[2]{{\par \color{omrTextMuted}{#1：#2}\vspace{0.15em}}}
+\newcommand{\fieldline}[2]{\omrFieldLine{#1}{#2}}
+\newcommand{\omrRole}[1]{{\par \color{omrTextMuted}{#1}\vspace{0.15em}}}
+\newcommand{\role}[1]{\omrRole{#1}}
