@@ -1,19 +1,18 @@
-\newtcbox{\omrTagBox}{
+\newtcbox{\omrTag}{
   nobeforeafter,
-  on line,
-  tcbox raise=0pt,
+  tcbox raise=-0.18ex,
   colback=omrTagBg,
   colframe=omrTagBg,
   boxrule=0pt,
   arc=2pt,
-  height=1.16em,
+  height=1.32em,
   valign=center,
-  left=3.5pt,
-  right=3.5pt,
+  left=4pt,
+  right=4pt,
   top=0pt,
   bottom=0pt,
   boxsep=0pt,
-  fontupper=\color{omrTagText}\normalsize\bfseries
+  fontupper=\color{omrTagText}\footnotesize
 }
 
-\newcommand{\tagbox}[1]{\raisebox{-0.55ex}{\omrTagBox{#1}}}
+\newcommand{\tagbox}[1]{\omrTag{#1}}
