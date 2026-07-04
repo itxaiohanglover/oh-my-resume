@@ -87,34 +87,34 @@ function initProject(targetDir) {
               omrPageMarginLeft: "8mm",
               omrPageMarginRight: "8mm",
               omrPageMarginTop: "8mm",
-              omrPageMarginBottom: "5mm",
+              omrPageMarginBottom: "8mm",
               omrPhotoWidth: "2.35cm",
               omrPhotoHeight: "2.75cm",
               omrHeaderGap: "7mm",
-              omrHeaderNameGap: "0.34em",
-              omrHeaderLineGap: "0.06em",
-              omrTitleBodyGap: "0.32em",
-              omrHeadingOneBefore: "0.35em",
-              omrHeadingOneAfter: "0.18em",
-              omrSectionBefore: "0.46em",
-              omrSectionAfter: "0.32em",
-              omrEntryBefore: "0.18em",
-              omrEntryAfter: "0em",
+              omrHeaderNameGap: "0.41em",
+              omrHeaderLineGap: "0.1em",
+              omrTitleBodyGap: "0.38em",
+              omrHeadingOneBefore: "0.42em",
+              omrHeadingOneAfter: "0.22em",
+              omrSectionBefore: "0.58em",
+              omrSectionAfter: "0.54em",
+              omrEntryBefore: "0.23em",
+              omrEntryAfter: "0.22em",
               omrEntryDateWidth: "39mm",
               omrPhotoRightInset: "0mm"
             },
             fonts: {
               omrBodyFont: "TeX Gyre Termes",
-              omrCJKMainFont: "Songti SC"
+              omrCJKMainFont: "Kaiti SC"
             },
             sizes: {
-              omrBodyFontSize: "10pt",
-              omrBodyLineHeight: "13pt",
-              omrHOneFontSize: "16pt",
+              omrBodyFontSize: "11.2pt",
+              omrBodyLineHeight: "14.5pt",
+              omrHOneFontSize: "16.9pt",
               omrHOneLineHeight: "19pt",
-              omrSectionFontSize: "11.4pt",
+              omrSectionFontSize: "12.1pt",
               omrSectionLineHeight: "14.2pt",
-              omrEntryFontSize: "10pt",
+              omrEntryFontSize: "10.5pt",
               omrEntryLineHeight: "13pt"
             }
           }
@@ -343,36 +343,36 @@ function normalizeDebugConfig(config = {}) {
         omrPageMarginLeft: "8mm",
         omrPageMarginRight: "8mm",
         omrPageMarginTop: "8mm",
-        omrPageMarginBottom: "5mm",
+        omrPageMarginBottom: "8mm",
         omrPhotoWidth: "2.35cm",
         omrPhotoHeight: "2.75cm",
         omrHeaderGap: "7mm",
-        omrHeaderNameGap: "0.34em",
-        omrHeaderLineGap: "0.06em",
-        omrTitleBodyGap: "0.32em",
-        omrHeadingOneBefore: "0.35em",
-        omrHeadingOneAfter: "0.18em",
-        omrSectionBefore: "0.46em",
-        omrSectionAfter: "0.32em",
-        omrEntryBefore: "0.18em",
-        omrEntryAfter: "0em",
+        omrHeaderNameGap: "0.41em",
+        omrHeaderLineGap: "0.1em",
+        omrTitleBodyGap: "0.38em",
+        omrHeadingOneBefore: "0.42em",
+        omrHeadingOneAfter: "0.22em",
+        omrSectionBefore: "0.58em",
+        omrSectionAfter: "0.54em",
+        omrEntryBefore: "0.23em",
+        omrEntryAfter: "0.22em",
         omrEntryDateWidth: "39mm",
         omrPhotoRightInset: "0mm",
         ...(theme.lengths || {})
       },
       fonts: {
         omrBodyFont: "TeX Gyre Termes",
-        omrCJKMainFont: "Songti SC",
+        omrCJKMainFont: "Kaiti SC",
         ...(theme.fonts || {})
       },
       sizes: {
-        omrBodyFontSize: "10pt",
-        omrBodyLineHeight: "13pt",
-        omrHOneFontSize: "16pt",
+        omrBodyFontSize: "11.2pt",
+        omrBodyLineHeight: "14.5pt",
+        omrHOneFontSize: "16.9pt",
         omrHOneLineHeight: "19pt",
-        omrSectionFontSize: "11.4pt",
+        omrSectionFontSize: "12.1pt",
         omrSectionLineHeight: "14.2pt",
-        omrEntryFontSize: "10pt",
+        omrEntryFontSize: "10.5pt",
         omrEntryLineHeight: "13pt",
         ...(theme.sizes || {})
       }
@@ -686,14 +686,20 @@ function debugHtml(fileName) {
       font-size: 13px;
       white-space: nowrap;
     }
-    .menuItem select {
+    .menuItem select,
+    .menuItem input {
       height: 28px;
       border: 0;
       outline: 0;
       background: transparent;
       color: var(--text);
       font: inherit;
+    }
+    .menuItem select {
       cursor: pointer;
+    }
+    .menuItem input {
+      width: 72px;
     }
     .menuIcon {
       color: var(--muted);
@@ -818,15 +824,15 @@ function debugHtml(fileName) {
           <div class="settingsRow">
             <button class="ghost" id="smartOnePage" type="button">智能压缩一页</button>
             <button class="ghost" id="compactText" type="button">压缩文字</button>
-            <span class="menuItem"><span class="menuIcon">页边距</span><select id="quickMargin"></select></span>
+            <span class="menuItem"><span class="menuIcon">页边距</span><input id="quickMargin" placeholder="8mm"></span>
           </div>
         </section>
         <section class="settingsSection">
           <p class="settingsTitle">字体</p>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">中文字体</span><select id="quickFont"></select></span>
-            <span class="menuItem"><span class="menuIcon">字号</span><select id="quickSize"></select></span>
-            <span class="menuItem"><span class="menuIcon">行高</span><select id="quickLine"></select></span>
+            <span class="menuItem"><span class="menuIcon">字号</span><input id="quickSize" placeholder="11.2pt"></span>
+            <span class="menuItem"><span class="menuIcon">行高</span><input id="quickLine" placeholder="14.5pt"></span>
           </div>
         </section>
         <section class="settingsSection">
@@ -838,7 +844,7 @@ function debugHtml(fileName) {
         <section class="settingsSection">
           <p class="settingsTitle">照片</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">高度</span><select id="quickPhoto"></select></span>
+            <span class="menuItem"><span class="menuIcon">高度</span><input id="quickPhoto" placeholder="2.75cm"></span>
           </div>
         </section>
       </div>
@@ -884,10 +890,6 @@ function debugHtml(fileName) {
       ["PingFang SC", "苹方"],
       ["Noto Serif CJK SC", "Noto Serif"]
     ];
-    const sizeOptions = ["9.2pt", "9.6pt", "10pt", "10.5pt", "11pt", "12pt"];
-    const lineOptions = ["11.8pt", "12.2pt", "13pt", "13.5pt", "14pt", "15pt"];
-    const marginOptions = ["5mm", "6mm", "8mm", "10mm", "12mm", "15mm"];
-    const photoOptions = ["2.25cm", "2.55cm", "2.75cm", "3cm", "3.25cm"];
     const themeOptions = [
       { name: "blue", color: "37,99,235", tagBg: "232,241,255", sectionBg: "242,242,242" },
       { name: "black", color: "17,24,39", tagBg: "243,244,246", sectionBg: "242,242,242" },
@@ -989,10 +991,10 @@ function debugHtml(fileName) {
 
     function renderQuickControls() {
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
-      fillSelect(quickSize, sizeOptions.map((value) => [value, value]), getPath(currentConfig, "theme.sizes.omrBodyFontSize"));
-      fillSelect(quickLine, lineOptions.map((value) => [value, value.replace("pt", "")]), getPath(currentConfig, "theme.sizes.omrBodyLineHeight"));
-      fillSelect(quickMargin, marginOptions.map((value) => [value, value.replace("mm", "")]), getPath(currentConfig, "theme.lengths.omrPageMarginLeft"));
-      fillSelect(quickPhoto, photoOptions.map((value) => [value, value]), getPath(currentConfig, "theme.lengths.omrPhotoHeight"));
+      quickSize.value = getPath(currentConfig, "theme.sizes.omrBodyFontSize");
+      quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");
+      quickMargin.value = getPath(currentConfig, "theme.lengths.omrPageMarginLeft");
+      quickPhoto.value = getPath(currentConfig, "theme.lengths.omrPhotoHeight");
       quickTheme.innerHTML = "";
       const activeColor = getPath(currentConfig, "theme.colors.omrTagText");
       for (const theme of themeOptions) {
@@ -1123,10 +1125,10 @@ function debugHtml(fileName) {
     smartOnePage.addEventListener("click", applySmartOnePage);
     compactText.addEventListener("click", applyCompactText);
     quickFont.addEventListener("change", applyQuickConfig);
-    quickSize.addEventListener("change", applyQuickConfig);
-    quickLine.addEventListener("change", applyQuickConfig);
-    quickMargin.addEventListener("change", applyQuickConfig);
-    quickPhoto.addEventListener("change", applyQuickConfig);
+    quickSize.addEventListener("input", applyQuickConfig);
+    quickLine.addEventListener("input", applyQuickConfig);
+    quickMargin.addEventListener("input", applyQuickConfig);
+    quickPhoto.addEventListener("input", applyQuickConfig);
     saveStyle.addEventListener("click", saveStyleConfig);
     resetStyle.addEventListener("click", loadState);
     renderButton.addEventListener("click", render);
