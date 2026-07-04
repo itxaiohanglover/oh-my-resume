@@ -1,6 +1,6 @@
-\newcommand{\omrName}[1]{{\Large\bfseries #1}\par\vspace{0.28em}}
+\newcommand{\omrName}[1]{{\Large\bfseries #1}\par\vspace{\omrHeaderNameGap}}
 \newcommand{\name}[1]{\omrName{#1}}
-\newcommand{\omrContactLine}[1]{{\color{omrTextMuted} #1}\par\vspace{0.08ex}}
+\newcommand{\omrContactLine}[1]{{\color{omrTextMuted} #1}\par\vspace{\omrHeaderLineGap}}
 \newcommand{\contactLine}[1]{\omrContactLine{#1}}
 
 \newcommand{\email}[1]{\faEnvelope\ #1}
@@ -19,14 +19,12 @@
       #2
     \end{minipage}%
   }{%
-    \begin{minipage}[t]{\dimexpr\linewidth-\omrPhotoWidth-\omrHeaderGap-\omrPhotoRightInset\relax}
-      \vspace{0pt}
+    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\linewidth-\omrPhotoWidth-\omrHeaderGap-\omrPhotoRightInset\relax}
       \omrName{#1}
       #2
     \end{minipage}%
     \hspace{\omrHeaderGap}%
-    \begin{minipage}[t]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
-      \vspace{0pt}
+    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
       \raggedleft
       \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
     \end{minipage}%

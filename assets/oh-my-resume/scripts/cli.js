@@ -91,6 +91,16 @@ function initProject(targetDir) {
               omrPhotoWidth: "2.35cm",
               omrPhotoHeight: "2.75cm",
               omrHeaderGap: "7mm",
+              omrHeaderNameGap: "0.34em",
+              omrHeaderLineGap: "0.06em",
+              omrTitleBodyGap: "0.32em",
+              omrHeadingOneBefore: "0.35em",
+              omrHeadingOneAfter: "0.18em",
+              omrSectionBefore: "0.46em",
+              omrSectionAfter: "0.32em",
+              omrEntryBefore: "0.18em",
+              omrEntryAfter: "0em",
+              omrEntryDateWidth: "39mm",
               omrPhotoRightInset: "0mm"
             },
             fonts: {
@@ -218,8 +228,6 @@ function debugCommand(args) {
   const input = resolveMarkdownInput(cwd, config, args._[0]);
   const inputPath = path.resolve(cwd, input);
   const pdfPath = path.resolve(cwd, args.pdf || config.pdf || defaultPdfOutput(input));
-  let lastPing = Date.now();
-  let sawBrowser = false;
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`Markdown file not found: ${input}`);
@@ -266,8 +274,6 @@ function debugCommand(args) {
     }
 
     if (req.method === "POST" && requestUrl.pathname === "/api/ping") {
-      sawBrowser = true;
-      lastPing = Date.now();
       sendJson(res, 200, { ok: true });
       return;
     }
@@ -316,16 +322,9 @@ function debugCommand(args) {
     const url = `http://127.0.0.1:${address.port}`;
     console.log(`Oh My Resume debug: ${url}`);
     console.log(`Editing ${path.relative(cwd, inputPath)} -> ${path.relative(cwd, pdfPath)}`);
-    console.log("Close the browser tab to stop this debug session.");
+    console.log("Press Ctrl+C in the terminal to stop this debug session.");
     if (!args["no-open"]) openBrowser(url);
   });
-
-  const interval = setInterval(() => {
-    if (sawBrowser && Date.now() - lastPing > 12000) {
-      clearInterval(interval);
-      server.close(() => process.exit(0));
-    }
-  }, 3000);
 }
 
 function normalizeDebugConfig(config = {}) {
@@ -348,6 +347,16 @@ function normalizeDebugConfig(config = {}) {
         omrPhotoWidth: "2.35cm",
         omrPhotoHeight: "2.75cm",
         omrHeaderGap: "7mm",
+        omrHeaderNameGap: "0.34em",
+        omrHeaderLineGap: "0.06em",
+        omrTitleBodyGap: "0.32em",
+        omrHeadingOneBefore: "0.35em",
+        omrHeadingOneAfter: "0.18em",
+        omrSectionBefore: "0.46em",
+        omrSectionAfter: "0.32em",
+        omrEntryBefore: "0.18em",
+        omrEntryAfter: "0em",
+        omrEntryDateWidth: "39mm",
         omrPhotoRightInset: "0mm",
         ...(theme.lengths || {})
       },
@@ -773,8 +782,8 @@ function debugHtml(fileName) {
     <header class="toolbar">
       <div class="title">Oh My Resume · ${escapeHtml(fileName)}</div>
       <div class="actions">
-        <button class="ghost" id="style">Setting</button>
-        <button id="render">Render</button>
+        <button class="ghost" id="style">样式设置</button>
+        <button id="render">渲染 PDF</button>
       </div>
     </header>
     <main class="workspace">
@@ -782,66 +791,66 @@ function debugHtml(fileName) {
         <textarea id="editor" spellcheck="false"></textarea>
       </section>
       <section class="previewPane" id="preview">
-        <div class="empty">Click Render to generate the PDF preview.</div>
+        <div class="empty">点击“渲染 PDF”生成右侧预览。</div>
       </section>
     </main>
     <footer class="status">
       <span id="paths"></span>
-      <span id="message">Ready</span>
+      <span id="message">就绪</span>
     </footer>
   </div>
   <dialog id="errorDialog">
     <div class="dialogHead">
-      <span>Render Error</span>
-      <button class="ghost" id="closeError">Close</button>
+      <span>渲染错误</span>
+      <button class="ghost" id="closeError">关闭</button>
     </div>
     <pre class="dialogBody" id="errorText"></pre>
   </dialog>
   <dialog id="styleDialog">
     <div class="dialogHead">
-      <span>Setting</span>
-      <button class="ghost" id="closeStyle">Close</button>
+      <span>样式设置</span>
+      <button class="ghost" id="closeStyle">关闭</button>
     </div>
     <div class="styleBody">
       <div class="quickMenu">
         <section class="settingsSection">
-          <p class="settingsTitle">Layout</p>
+          <p class="settingsTitle">版式</p>
           <div class="settingsRow">
-            <button class="ghost" id="smartOnePage" type="button">Smart One Page</button>
-            <button class="ghost" id="compactText" type="button">Compact Text</button>
-            <span class="menuItem"><span class="menuIcon">Margin</span><select id="quickMargin"></select></span>
+            <button class="ghost" id="smartOnePage" type="button">智能压缩一页</button>
+            <button class="ghost" id="compactText" type="button">压缩文字</button>
+            <span class="menuItem"><span class="menuIcon">页边距</span><select id="quickMargin"></select></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">Typography</p>
+          <p class="settingsTitle">字体</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">Font</span><select id="quickFont"></select></span>
-            <span class="menuItem"><span class="menuIcon">Size</span><select id="quickSize"></select></span>
-            <span class="menuItem"><span class="menuIcon">Line</span><select id="quickLine"></select></span>
+            <span class="menuItem"><span class="menuIcon">中文字体</span><select id="quickFont"></select></span>
+            <span class="menuItem"><span class="menuIcon">字号</span><select id="quickSize"></select></span>
+            <span class="menuItem"><span class="menuIcon">行高</span><select id="quickLine"></select></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">Theme</p>
+          <p class="settingsTitle">主题</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">Color</span><span class="swatches" id="quickTheme"></span></span>
+            <span class="menuItem"><span class="menuIcon">颜色</span><span class="swatches" id="quickTheme"></span></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">Photo</p>
+          <p class="settingsTitle">照片</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">Height</span><select id="quickPhoto"></select></span>
+            <span class="menuItem"><span class="menuIcon">高度</span><select id="quickPhoto"></select></span>
           </div>
         </section>
       </div>
       <details class="advanced">
-        <summary>Advanced tokens</summary>
-        <p class="styleHint">These values map directly to omr.config.json.</p>
+        <summary>高级参数</summary>
+        <p class="styleHint">这些值会直接写入 omr.config.json，支持 mm、cm、pt、em 等 LaTeX 单位。</p>
         <div class="styleGrid" id="styleGrid"></div>
       </details>
     </div>
     <div class="dialogActions">
-      <button class="ghost" id="resetStyle">Reload</button>
-      <button id="saveStyle">Save Style</button>
+      <button class="ghost" id="resetStyle">重新加载</button>
+      <button id="saveStyle">保存样式</button>
     </div>
   </dialog>
   <script>
@@ -887,27 +896,37 @@ function debugHtml(fileName) {
     ];
 
     const styleFields = [
-      ["theme.colors.omrTagBg", "Tag background"],
-      ["theme.colors.omrTagText", "Tag text"],
-      ["theme.colors.omrSectionBg", "Section background"],
-      ["theme.colors.omrSectionRule", "Section rule"],
-      ["theme.colors.omrLinkColor", "Link color"],
-      ["theme.lengths.omrPageMarginLeft", "Left margin"],
-      ["theme.lengths.omrPageMarginRight", "Right margin"],
-      ["theme.lengths.omrPageMarginTop", "Top margin"],
-      ["theme.lengths.omrPageMarginBottom", "Bottom margin"],
-      ["theme.lengths.omrPhotoWidth", "Photo width"],
-      ["theme.lengths.omrPhotoHeight", "Photo height"],
-      ["theme.lengths.omrHeaderGap", "Header gap"],
-      ["theme.lengths.omrPhotoRightInset", "Photo right inset"],
-      ["theme.fonts.omrBodyFont", "Latin font"],
-      ["theme.fonts.omrCJKMainFont", "CJK font"],
-      ["theme.sizes.omrBodyFontSize", "Body/list size"],
-      ["theme.sizes.omrHOneFontSize", "# title size"],
-      ["theme.sizes.omrSectionFontSize", "## section size"],
-      ["theme.sizes.omrEntryFontSize", "### entry size"],
-      ["markdown.dateFields", "Date fields"],
-      ["markdown.tagFields", "Tag fields"]
+      ["theme.colors.omrTagBg", "标签背景色"],
+      ["theme.colors.omrTagText", "标签文字色"],
+      ["theme.colors.omrSectionBg", "二级标题背景色"],
+      ["theme.colors.omrSectionRule", "二级标题左侧竖线色"],
+      ["theme.colors.omrLinkColor", "链接颜色"],
+      ["theme.lengths.omrPageMarginLeft", "左页边距"],
+      ["theme.lengths.omrPageMarginRight", "右页边距"],
+      ["theme.lengths.omrPageMarginTop", "上页边距"],
+      ["theme.lengths.omrPageMarginBottom", "下页边距"],
+      ["theme.lengths.omrPhotoWidth", "照片宽度"],
+      ["theme.lengths.omrPhotoHeight", "照片高度"],
+      ["theme.lengths.omrHeaderGap", "头部文字与照片间距"],
+      ["theme.lengths.omrHeaderNameGap", "姓名到联系方式间距"],
+      ["theme.lengths.omrHeaderLineGap", "联系方式行距"],
+      ["theme.lengths.omrTitleBodyGap", "标题到正文间距"],
+      ["theme.lengths.omrHeadingOneBefore", "一级标题上间距"],
+      ["theme.lengths.omrHeadingOneAfter", "一级标题下间距"],
+      ["theme.lengths.omrSectionBefore", "二级标题上间距"],
+      ["theme.lengths.omrSectionAfter", "二级标题下间距"],
+      ["theme.lengths.omrEntryBefore", "三级标题上间距"],
+      ["theme.lengths.omrEntryAfter", "三级标题下间距"],
+      ["theme.lengths.omrEntryDateWidth", "三级标题日期宽度"],
+      ["theme.lengths.omrPhotoRightInset", "照片右侧缩进"],
+      ["theme.fonts.omrBodyFont", "英文字体"],
+      ["theme.fonts.omrCJKMainFont", "中文字体"],
+      ["theme.sizes.omrBodyFontSize", "正文/列表字号"],
+      ["theme.sizes.omrHOneFontSize", "一级标题字号"],
+      ["theme.sizes.omrSectionFontSize", "二级标题字号"],
+      ["theme.sizes.omrEntryFontSize", "三级标题字号"],
+      ["markdown.dateFields", "日期字段名"],
+      ["markdown.tagFields", "标签字段名"]
     ];
 
     async function loadState() {
@@ -925,14 +944,14 @@ function debugHtml(fileName) {
       preview.innerHTML = "";
       const frame = document.createElement("iframe");
       frame.src = url;
-      frame.title = "PDF preview";
+      frame.title = "PDF 预览";
       preview.appendChild(frame);
     }
 
     async function render() {
       renderButton.disabled = true;
       message.className = "";
-      message.textContent = "Rendering...";
+      message.textContent = "正在渲染...";
       try {
         const response = await fetch("/api/render", {
           method: "POST",
@@ -940,12 +959,12 @@ function debugHtml(fileName) {
           body: JSON.stringify({ markdown: editor.value })
         });
         const data = await response.json();
-        if (!data.ok) throw new Error(data.error || "Render failed.");
+        if (!data.ok) throw new Error(data.error || "渲染失败。");
         showPdf(data.pdfUrl);
-        message.textContent = "Rendered " + new Date().toLocaleTimeString();
+        message.textContent = "已渲染 " + new Date().toLocaleTimeString();
       } catch (error) {
         message.className = "error";
-        message.textContent = "Render failed";
+        message.textContent = "渲染失败";
         errorText.textContent = error.message || String(error);
         errorDialog.showModal();
       } finally {

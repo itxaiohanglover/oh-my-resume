@@ -237,8 +237,8 @@ function renderContactLines(meta) {
 }
 
 function renderEntry(entry) {
-  const tags = entry.tags.map((tag) => `\\,\\tagbox{${inline(tag)}}`).join("");
-  const title = `\\omrStrong{${inline(entry.title)}}${tags}`;
+  const tags = entry.tags.map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
+  const title = `${inline(entry.title)}${tags}`;
   const date = entry.date ? `\\tightdate{${inline(entry.date)}}` : "";
   const parts = [`\\datedsubsection{${title}}{${date}}`];
 

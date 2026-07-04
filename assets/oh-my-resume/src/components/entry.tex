@@ -1,4 +1,15 @@
-\newcommand{\omrDatedEntry}[2]{\subsection*{{\fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont #1 \hfill {\color{omrTextMuted}#2}}}}
+\newcommand{\omrDatedEntry}[2]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{\bfseries #1}%
+  \hfill
+  \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#2}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\datedsubsection}[2]{\omrDatedEntry{#1}{#2}}
 \newcommand{\tightdate}[1]{{\xeCJKsetup{CJKecglue={\hskip 0pt}}#1}}
 \newcommand{\omrFieldLine}[2]{{\par \color{omrTextMuted}{#1：#2}\vspace{0.15em}}}

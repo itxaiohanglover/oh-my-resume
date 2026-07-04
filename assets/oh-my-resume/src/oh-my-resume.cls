@@ -48,8 +48,18 @@
 \newcommand{\omrPhotoHeight}{2.75cm}
 \newcommand{\omrHeaderGap}{7mm}
 \newcommand{\omrPhotoRightInset}{0mm}
-\newcommand{\omrSectionBefore}{0.6em}
-\newcommand{\omrSectionAfter}{0.24em}
+\newcommand{\omrHeaderNameGap}{0.34em}
+\newcommand{\omrHeaderLineGap}{0.06em}
+\newcommand{\omrHeadingOneBefore}{0.35em}
+\newcommand{\omrHeadingOneAfter}{0.18em}
+\newcommand{\omrSectionBefore}{0.46em}
+\newcommand{\omrTitleBodyGap}{0.32em}
+\newcommand{\omrSectionAfter}{\omrTitleBodyGap}
+\newcommand{\omrEntryBefore}{0.18em}
+\newcommand{\omrEntryAfter}{0em}
+\newcommand{\omrHeadingFourBefore}{0.35em}
+\newcommand{\omrHeadingFourAfter}{0.18em}
+\newcommand{\omrEntryDateWidth}{39mm}
 \newcommand{\omrBodyFont}{TeX Gyre Termes}
 \newcommand{\omrCJKMainFont}{Songti SC}
 \newcommand{\omrBodyFontSize}{10pt}
@@ -75,14 +85,14 @@
 }
 
 \newcommand{\omrApplyFonts}{%
-  \IfFontExistsTF{\omrBodyFont}{\setmainfont{\omrBodyFont}}{%
-    \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{}%
+  \IfFontExistsTF{\omrBodyFont}{\setmainfont[AutoFakeBold=2]{\omrBodyFont}}{%
+    \IfFontExistsTF{Times New Roman}{\setmainfont[AutoFakeBold=2]{Times New Roman}}{}%
   }%
-  \IfFontExistsTF{\omrCJKMainFont}{\setCJKmainfont{\omrCJKMainFont}}{%
-    \IfFontExistsTF{Noto Serif CJK SC}{\setCJKmainfont{Noto Serif CJK SC}}{%
-      \IfFontExistsTF{Songti SC}{\setCJKmainfont{Songti SC}}{%
-        \IfFontExistsTF{PingFang SC}{\setCJKmainfont{PingFang SC}}{%
-          \IfFontExistsTF{FandolSong-Regular}{\setCJKmainfont{FandolSong-Regular}}{}%
+  \IfFontExistsTF{\omrCJKMainFont}{\setCJKmainfont[AutoFakeBold=2]{\omrCJKMainFont}}{%
+    \IfFontExistsTF{Noto Serif CJK SC}{\setCJKmainfont[AutoFakeBold=2]{Noto Serif CJK SC}}{%
+      \IfFontExistsTF{Songti SC}{\setCJKmainfont[AutoFakeBold=2]{Songti SC}}{%
+        \IfFontExistsTF{PingFang SC}{\setCJKmainfont[AutoFakeBold=2]{PingFang SC}}{%
+          \IfFontExistsTF{FandolSong-Regular}{\setCJKmainfont[AutoFakeBold=2]{FandolSong-Regular}}{}%
         }%
       }%
     }%
@@ -99,7 +109,7 @@
   \titleformat{\section}{\normalsize\bfseries\raggedright}{}{0em}{}
   \titlespacing*{\section}{0cm}{*0.9}{*0.25}
   \titleformat{\subsection}{\normalsize\bfseries\raggedright}{}{0em}{}
-  \titlespacing*{\subsection}{0cm}{*0.6}{*0.1}
+  \titlespacing*{\subsection}{0cm}{0pt}{0pt}
 }
 
 \endinput
