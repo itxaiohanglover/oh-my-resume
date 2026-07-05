@@ -822,8 +822,6 @@ function debugHtml(fileName) {
         <section class="settingsSection">
           <p class="settingsTitle">版式</p>
           <div class="settingsRow">
-            <button class="ghost" id="smartOnePage" type="button">智能压缩一页</button>
-            <button class="ghost" id="compactText" type="button">压缩文字</button>
             <span class="menuItem"><span class="menuIcon">页边距</span><input id="quickMargin" placeholder="8mm"></span>
           </div>
         </section>
@@ -874,8 +872,6 @@ function debugHtml(fileName) {
     const saveStyle = document.getElementById("saveStyle");
     const resetStyle = document.getElementById("resetStyle");
     const styleGrid = document.getElementById("styleGrid");
-    const smartOnePage = document.getElementById("smartOnePage");
-    const compactText = document.getElementById("compactText");
     const quickFont = document.getElementById("quickFont");
     const quickSize = document.getElementById("quickSize");
     const quickLine = document.getElementById("quickLine");
@@ -1067,32 +1063,6 @@ function debugHtml(fileName) {
       renderStyleFields();
     }
 
-    function applySmartOnePage() {
-      setPath(currentConfig, "theme.lengths.omrPageMarginLeft", "6mm");
-      setPath(currentConfig, "theme.lengths.omrPageMarginRight", "6mm");
-      setPath(currentConfig, "theme.lengths.omrPageMarginTop", "6mm");
-      setPath(currentConfig, "theme.lengths.omrPageMarginBottom", "4mm");
-      setPath(currentConfig, "theme.sizes.omrBodyFontSize", "9.6pt");
-      setPath(currentConfig, "theme.sizes.omrBodyLineHeight", "12.2pt");
-      setPath(currentConfig, "theme.sizes.omrEntryFontSize", "9.6pt");
-      setPath(currentConfig, "theme.sizes.omrEntryLineHeight", "12.2pt");
-      setPath(currentConfig, "theme.sizes.omrSectionFontSize", "11.2pt");
-      setPath(currentConfig, "theme.lengths.omrPhotoHeight", "2.3cm");
-      renderStyleFields();
-      renderQuickControls();
-    }
-
-    function applyCompactText() {
-      const body = getPath(currentConfig, "theme.sizes.omrBodyFontSize") || "10pt";
-      const numeric = Math.max(9.2, parseFloat(body) - 0.4).toFixed(1).replace(/\\.0$/, "") + "pt";
-      setPath(currentConfig, "theme.sizes.omrBodyFontSize", numeric);
-      setPath(currentConfig, "theme.sizes.omrEntryFontSize", numeric);
-      setPath(currentConfig, "theme.sizes.omrBodyLineHeight", (parseFloat(numeric) + 2.6).toFixed(1).replace(/\\.0$/, "") + "pt");
-      setPath(currentConfig, "theme.sizes.omrEntryLineHeight", (parseFloat(numeric) + 2.6).toFixed(1).replace(/\\.0$/, "") + "pt");
-      renderStyleFields();
-      renderQuickControls();
-    }
-
     async function saveStyleConfig() {
       saveStyle.disabled = true;
       message.className = "";
@@ -1122,8 +1092,6 @@ function debugHtml(fileName) {
     closeError.addEventListener("click", () => errorDialog.close());
     closeStyle.addEventListener("click", () => styleDialog.close());
     styleButton.addEventListener("click", () => styleDialog.showModal());
-    smartOnePage.addEventListener("click", applySmartOnePage);
-    compactText.addEventListener("click", applyCompactText);
     quickFont.addEventListener("change", applyQuickConfig);
     quickSize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);
