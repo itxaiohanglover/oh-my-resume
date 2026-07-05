@@ -58,13 +58,14 @@
 
 这个领域已有很多成熟产品，它们解决的问题不同。Oh My Resume 不试图复刻一个在线简历网站，而是选择另一条路线：**本地、自由、可编程、可被 Agent 深度协作。**
 
-| 工具 | 擅长 | 取舍 |
-| --- | --- | --- |
-|  [超级简历 / WonderCV](https://www.wondercv.com/) | 在线简历制作、模板丰富、AI 辅助、上手快 | 更适合平台内工作流；深度自定义、源码归属、版本管理受产品边界影响 |
-|  [老鱼简历](https://www.laoyujianli.com/) | 快速生成在线简历、模板和 AI 编辑能力 | 适合快速产出；不太适合本地 Git 管理、Agent 读取上下文后的长期迭代 |
-|  [OneResume](https://github.com/virantha/one_resume) | 开源、YAML 数据驱动、多版本生成 | 结构化能力强；对 Markdown 写作体验、中文 TeX 排版、Agent 调参工作流关注较少 |
-|  LaTeX 简历模板 | 排版精确、源码可控 | 能力强但门槛高；频繁改内容时直接写 TeX 成本偏高 |
-|  **Oh My Resume** | **Free、Markdown、自定义、本地 PDF、AI Agent 协作、样式参数化、可 fork** | 需要本地具备 Node.js 和 XeLaTeX |
+| 工具 | 数据模型 | 工作流 | AI能力 | 控制权 | 迭代能力 |
+|------|----------|--------|--------|--------|----------|
+| [超级简历 / WonderCV](https://www.wondercv.com/) | 平台封装 JSON + 模板 | 在线编辑 + 表单填充 | 有 AI 辅助生成内容 | ❌ 强绑定平台 | ❌ 单次导出导向 |
+| [老鱼简历](https://www.laoyujianli.com/) | 表单 / 在线结构 | 模板驱动快速生成 | 基础 AI 改写 | ❌ 平台锁定 | ❌ 弱版本管理 |
+| [OneResume](https://github.com/virantha/one_resume) | YAML 数据结构 | CLI / 模板渲染 | ❌ 无原生 AI | ✔ 开源可控 | ⚠ 支持多版本但非 Git-first |
+| LaTeX 简历模板 | TeX 源码 | 手写 / 编译 | ❌ 无 AI | ✔ 完全可控 | ⚠ 但迭代成本高 |
+| **Oh My Resume** | **Markdown + Config ** | **CLI + Agent + Debug UI** | **✔ Agent-native（Codex / Claude 可直接参与编辑）** | **✔ 完全本地 / 可 fork** | **✔ Git-first + 长期演化设计** |
+
 
 我们的优势不是"模板最多"，而是：
 
