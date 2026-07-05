@@ -1,11 +1,11 @@
 <div align="center">
   <img src="assets/logo_new.svg" width="100px" alt="Oh My Resume" />
-    <p align="center">
+  <h1>🚀Oh My Resume</h1>
+  <p>📄基于 Markdown 的 AI 驱动简历工程化系统</p>
+  <p align="center">
   <a href="../README.zh-CN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>
   <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>
 </p>
-  <h1>🚀Oh My Resume</h1>
-  <p>📄基于 Markdown 的 AI 驱动简历工程化系统</p>
   <p>
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
     <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform" />
