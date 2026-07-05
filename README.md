@@ -1,6 +1,8 @@
-# Oh My Resume
-
-![Oh My Resume logo](assets/logo.svg)
+<div align="center">
+  <img src="assets/logo_new.svg" width="100px" alt="Oh My Resume" />
+  <h1>Oh My Resume</h1>
+  <p>基于 Markdown 的 AI 驱动简历工程化系统</p>
+</div>
 
 Oh My Resume 是一个 Skill-first 的 Markdown 简历系统。它面向希望把简历当作长期资产维护的人：简历不应该被锁在某个网站表单里，而应该像代码一样可读、可改、可追踪、可复用。
 
@@ -13,6 +15,9 @@ Oh My Resume 是一个 Skill-first 的 Markdown 简历系统。它面向希望�
 - **所有文件都保存在本地，可版本管理，可自由 fork。**
 
 ![Oh My Resume example](assets/example.png)
+
+Windows 下的工作流演示：
+![Workflow Demo in Windows](assets/workflow-demo-win.gif)
 
 ## Philosophy
 

@@ -1,0 +1,25 @@
+<svg width="39" height="39" viewBox="0 0 39 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0)">
+<!-- outer gradient ring background -->
+<circle cx="19.5" cy="19.5" r="19.5" fill="#D5E5FA"/>
+<!-- outer ring arc (kept from original) -->
+<path d="M19.5 3.05176e-05C22.993 3.05592e-05 26.4219 0.938272 29.4282 2.71669C32.4346 4.49511 34.9081 7.04841 36.5901 10.1097C38.2722 13.171 39.1011 16.628 38.9902 20.1192C38.8793 23.6104 37.8326 27.0078 35.9596 29.9561C34.0867 32.9045 31.4561 35.2957 28.3429 36.8797C25.2297 38.4637 21.7482 39.1824 18.2623 38.9607C14.7763 38.739 11.4139 37.585 8.52653 35.6194C5.63911 33.6537 3.33268 30.9486 1.84832 27.7867L4.5253 26.5299C5.78456 29.2123 7.7412 31.5072 10.1907 33.1748C12.6402 34.8423 15.4927 35.8213 18.45 36.0094C21.4073 36.1975 24.3608 35.5877 27.0018 34.244C29.6429 32.9002 31.8745 30.8717 33.4634 28.3704C35.0524 25.8692 35.9403 22.9871 36.0344 20.0253C36.1285 17.0635 35.4253 14.1309 33.9983 11.5338C32.5713 8.93678 30.473 6.7707 27.9225 5.26199C25.3721 3.75328 22.4633 2.95733 19.5 2.95732L19.5 3.05176e-05Z" fill="#5094F0"/>
+<!-- white inner circle -->
+<circle cx="19.5" cy="19.5" r="17.5" fill="white"/>
+<!-- Markdown document icon: rounded rect page -->
+<rect x="10" y="10" width="19" height="19" rx="2.5" fill="#F8FAFC" stroke="#111827" stroke-width="1.5"/>
+<!-- heading line (bold/longer, like # title) -->
+<rect x="13" y="14" width="10" height="1.6" rx="0.8" fill="#111827"/>
+<!-- body line 1 -->
+<rect x="13" y="17.5" width="13" height="1.2" rx="0.6" fill="#8E95A2"/>
+<!-- accent line (like a highlighted row or link) -->
+<rect x="13" y="20.2" width="8" height="1.2" rx="0.6" fill="#5094F0"/>
+<!-- body line 2 -->
+<rect x="13" y="22.9" width="11" height="1.2" rx="0.6" fill="#8E95A2"/>
+</g>
+<defs>
+<clipPath id="clip0">
+<rect width="39" height="39" fill="white"/>
+</clipPath>
+</defs>
+</svg>
