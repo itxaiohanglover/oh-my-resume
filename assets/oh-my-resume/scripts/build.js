@@ -6,16 +6,19 @@ const path = require("path");
 const packageRoot = path.resolve(__dirname, "..");
 
 function parseFrontmatter(source) {
-  if (!source.startsWith("---\n")) {
+  const delimiter = source.startsWith("---\r\n") ? "\r\n" : source.startsWith("---\n") ? "\n" : null;
+  if (!delimiter) {
     return [{}, source];
   }
 
-  const end = source.indexOf("\n---", 4);
+  const prefixLen = 3 + delimiter.length; // "---" + line ending
+  const endMarker = delimiter + "---";
+  const end = source.indexOf(endMarker, prefixLen);
   if (end === -1) {
     throw new Error("Frontmatter is missing a closing --- line.");
   }
 
-  const raw = source.slice(4, end).split(/\r?\n/);
+  const raw = source.slice(prefixLen, end).split(/\r?\n/);
   const data = {};
   let activeList = null;
 
@@ -42,7 +45,7 @@ function parseFrontmatter(source) {
     }
   }
 
-  return [data, source.slice(end + 5).trimStart()];
+  return [data, source.slice(end + endMarker.length + delimiter.length).trimStart()];
 }
 
 function stripQuotes(value) {
