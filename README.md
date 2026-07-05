@@ -3,7 +3,7 @@
   <h1>🚀Oh My Resume</h1>
   <p>📄基于 Markdown 的 AI 驱动简历工程化系统</p>
   <p align="center">
-  <a href="../README.zh-CN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>
+  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>
   <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>
 </p>
   <p>
