@@ -46,7 +46,8 @@
 \newcommand{\omrPageMarginBottom}{5mm}
 \newcommand{\omrPhotoWidth}{2.35cm}
 \newcommand{\omrPhotoHeight}{2.75cm}
-\newcommand{\omrLogoHeight}{1.0cm}
+\newcommand{\omrLogoHeight}{1.2cm}
+\newlength{\omrSavedLineWidth}
 \newcommand{\omrHeaderGap}{7mm}
 \newcommand{\omrPhotoRightInset}{0mm}
 \newcommand{\omrHeaderNameGap}{0.34em}

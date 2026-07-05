@@ -1,26 +1,31 @@
 \newcommand{\omrSection}[1]{%
   \vspace{\omrSectionBefore}
+  \setlength{\omrSavedLineWidth}{\linewidth}%
   \begin{tcolorbox}[
-    enhanced,
-    colback=omrSectionBg,
-    colframe=omrSectionBg,
-    boxrule=0pt,
-    frame hidden,
-    overlay={\draw[omrSectionRule,line width=3pt] (frame.north west) -- (frame.south west);},
-    rightrule=0pt,
-    toprule=0pt,
-    bottomrule=0pt,
-    arc=0pt,
-    boxsep=2.5pt,
+    skin=empty,
     left=12pt,
-    right=0pt,
-    top=2.5pt,
-    bottom=2.5pt,
-    width=\linewidth,
+    right=5pt,
+    top=1pt,
+    bottom=1pt,
+    width=0.20\linewidth,
+    halign=left,
+    valign=center,
+    fontupper=\color{white}\fontsize{\omrSectionFontSize}{\omrSectionLineHeight}\selectfont\bfseries,
+    frame code={
+        \fill[omrSectionRule] (frame.south west) -- (frame.north west) -- ([xshift=-16pt]frame.north east) -- (frame.south east) -- cycle;
+    },
+    overlay={
+        \fill[omrSectionRule]
+          ([xshift=4pt, yshift=4pt]frame.south east) --
+          ([xshift=8pt, yshift=0pt]frame.south east) --
+          ({\the\dimexpr\omrSavedLineWidth-0pt\relax}, 0pt) --
+          ({\the\dimexpr\omrSavedLineWidth-0pt\relax}, 4pt) --
+          cycle;
+    },
     before skip=0pt,
     after skip=0pt
   ]
-  {\fontsize{\omrSectionFontSize}{\omrSectionLineHeight}\selectfont\textbf{#1}}
+  #1
   \end{tcolorbox}
   \vspace{\omrSectionAfter}
 }

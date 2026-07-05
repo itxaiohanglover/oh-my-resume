@@ -11,6 +11,20 @@
   \vspace{\omrEntryAfter}%
 }
 \newcommand{\datedsubsection}[2]{\omrDatedEntry{#1}{#2}}
+\newcommand{\datedsubsectionC}[3]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \rlap{\bfseries #1\hspace{1em}}%
+  \hfill
+  \makebox[0pt][c]{\bfseries #2}%
+  \hfill
+  \llap{\hspace{1em}\normalfont\color{omrTextMuted}#3}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\tightdate}[1]{{\xeCJKsetup{CJKecglue={\hskip 0pt}}#1}}
 \newcommand{\omrFieldLine}[2]{{\par \color{omrTextMuted}{#1：#2}\vspace{0.15em}}}
 \newcommand{\fieldline}[2]{\omrFieldLine{#1}{#2}}

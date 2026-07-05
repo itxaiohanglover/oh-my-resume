@@ -96,6 +96,7 @@ function parseMarkdown(markdown, options = {}) {
         title: parsedHeading.title,
         date: parsedHeading.date,
         tags: parsedHeading.tags,
+        center: parsedHeading.center,
         fields: [],
         bullets: [],
         paragraphs: []
@@ -136,6 +137,23 @@ function parseEntryHeading(value) {
   let title = String(value);
   let date = "";
   const tags = [];
+  let center = "";
+
+  // Extract <center> block first
+  title = title.replace(/<center>(.*?)<\/center>/gi, (_, content) => {
+    center = content.trim();
+    return "";
+  });
+
+  // Process centered tags separately
+  let centerTags = [];
+  if (center) {
+    center = center.replace(/`([^`]+)`/g, (_, content) => {
+      centerTags.push(content.trim());
+      return "";
+    });
+    center = center.replace(/\s+/g, " ").trim();
+  }
 
   title = title.replace(/<time>(.*?)<\/time>/gi, (_, content) => {
     date = content.trim();
@@ -150,7 +168,8 @@ function parseEntryHeading(value) {
   return {
     title: title.replace(/\s+/g, " ").trim(),
     date,
-    tags
+    tags,
+    center: center ? { text: center, tags: centerTags } : null
   };
 }
 
@@ -209,6 +228,15 @@ function inline(text) {
       }
     }
 
+    if (value.startsWith("<center>", i)) {
+      const end = value.indexOf("</center>", i + 8);
+      if (end !== -1) {
+        result += `\\omrCenter{${inline(value.slice(i + 8, end))}}`;
+        i = end + 9;
+        continue;
+      }
+    }
+
     if (value[i] === "[") {
       const textEnd = value.indexOf("]", i + 1);
       const urlStart = textEnd !== -1 ? value.indexOf("(", textEnd) : -1;
@@ -243,7 +271,15 @@ function renderEntry(entry) {
   const tags = entry.tags.map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
   const title = `${inline(entry.title)}${tags}`;
   const date = entry.date ? `\\tightdate{${inline(entry.date)}}` : "";
-  const parts = [`\\datedsubsection{${title}}{${date}}`];
+  const parts = [];
+
+  if (entry.center) {
+    const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
+    const cText = `${inline(entry.center.text)}${cTags}`;
+    parts.push(`\\datedsubsectionC{${title}}{${cText}}{${date}}`);
+  } else {
+    parts.push(`\\datedsubsection{${title}}{${date}}`);
+  }
 
   for (const field of entry.fields) {
     parts.push(`\\fieldline{${inline(field.label)}}{${inline(field.value)}}`);
