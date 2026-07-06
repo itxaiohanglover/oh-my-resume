@@ -80,7 +80,7 @@ function initProject(targetDir) {
               omrAccent: "59,130,246",
               omrTagBg: "232,241,255",
               omrTagText: "37,99,235",
-              omrSectionBg: "242,242,242",
+              omrSectionBg: "31,41,55",
               omrLinkColor: "37,99,235"
             },
             lengths: {
@@ -334,9 +334,8 @@ function normalizeDebugConfig(config = {}) {
       colors: {
         omrTagBg: "232,241,255",
         omrTagText: "37,99,235",
-        omrSectionBg: "242,242,242",
-        omrSectionRule: "31,41,55",
-        omrLinkColor: "37,99,235",
+        omrSectionBg: "31,41,55",
+omrLinkColor: "37,99,235",
         ...(theme.colors || {})
       },
       lengths: {
@@ -358,6 +357,7 @@ function normalizeDebugConfig(config = {}) {
         omrEntryAfter: "0.22em",
         omrEntryDateWidth: "39mm",
         omrPhotoRightInset: "0mm",
+        omrLogoHeight: "1.2cm",
         ...(theme.lengths || {})
       },
       fonts: {
@@ -840,9 +840,10 @@ function debugHtml(fileName) {
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">照片</p>
+          <p class="settingsTitle">图片</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">高度</span><input id="quickPhoto" placeholder="2.75cm"></span>
+            <span class="menuItem"><span class="menuIcon">个人照片高度</span><input id="quickPhoto" placeholder="2.75cm"></span>
+            <span class="menuItem"><span class="menuIcon">学校logo高度</span><input id="quickLogo" placeholder="1.2cm"></span>
           </div>
         </section>
       </div>
@@ -877,6 +878,7 @@ function debugHtml(fileName) {
     const quickLine = document.getElementById("quickLine");
     const quickMargin = document.getElementById("quickMargin");
     const quickPhoto = document.getElementById("quickPhoto");
+    const quickLogo = document.getElementById("quickLogo");
     const quickTheme = document.getElementById("quickTheme");
     let currentConfig = null;
 
@@ -887,17 +889,17 @@ function debugHtml(fileName) {
       ["Noto Serif CJK SC", "Noto Serif"]
     ];
     const themeOptions = [
-      { name: "blue", color: "37,99,235", tagBg: "232,241,255", sectionBg: "242,242,242" },
-      { name: "black", color: "17,24,39", tagBg: "243,244,246", sectionBg: "242,242,242" },
-      { name: "green", color: "15,118,110", tagBg: "225,245,238", sectionBg: "241,245,244" },
-      { name: "slate", color: "51,65,85", tagBg: "241,245,249", sectionBg: "243,244,246" }
+      { name: "blue", color: "37,99,235", tagBg: "232,241,255", sectionBg: "37,99,235" },
+      { name: "black", color: "17,24,39", tagBg: "243,244,246", sectionBg: "17,24,39" },
+      { name: "green", color: "15,118,110", tagBg: "225,245,238", sectionBg: "15,118,110" },
+      { name: "slate", color: "51,65,85", tagBg: "241,245,249", sectionBg: "51,65,85" },
+      { name: "red", color: "155,0,0", tagBg: "245,230,230", sectionBg: "155,0,0" }
     ];
 
     const styleFields = [
       ["theme.colors.omrTagBg", "标签背景色"],
       ["theme.colors.omrTagText", "标签文字色"],
-      ["theme.colors.omrSectionBg", "二级标题背景色"],
-      ["theme.colors.omrSectionRule", "二级标题左侧竖线色"],
+      ["theme.colors.omrSectionBg", "二级标题色块"],
       ["theme.colors.omrLinkColor", "链接颜色"],
       ["theme.lengths.omrPageMarginLeft", "左页边距"],
       ["theme.lengths.omrPageMarginRight", "右页边距"],
@@ -905,6 +907,7 @@ function debugHtml(fileName) {
       ["theme.lengths.omrPageMarginBottom", "下页边距"],
       ["theme.lengths.omrPhotoWidth", "照片宽度"],
       ["theme.lengths.omrPhotoHeight", "照片高度"],
+      ["theme.lengths.omrLogoHeight", "学校logo高度"],
       ["theme.lengths.omrHeaderGap", "头部文字与照片间距"],
       ["theme.lengths.omrHeaderNameGap", "姓名到联系方式间距"],
       ["theme.lengths.omrHeaderLineGap", "联系方式行距"],
@@ -991,6 +994,7 @@ function debugHtml(fileName) {
       quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");
       quickMargin.value = getPath(currentConfig, "theme.lengths.omrPageMarginLeft");
       quickPhoto.value = getPath(currentConfig, "theme.lengths.omrPhotoHeight");
+      quickLogo.value = getPath(currentConfig, "theme.lengths.omrLogoHeight");
       quickTheme.innerHTML = "";
       const activeColor = getPath(currentConfig, "theme.colors.omrTagText");
       for (const theme of themeOptions) {
@@ -1002,8 +1006,7 @@ function debugHtml(fileName) {
         item.addEventListener("click", () => {
           setPath(currentConfig, "theme.colors.omrTagText", theme.color);
           setPath(currentConfig, "theme.colors.omrLinkColor", theme.color);
-          setPath(currentConfig, "theme.colors.omrSectionRule", theme.color);
-          setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
+setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
           setPath(currentConfig, "theme.colors.omrSectionBg", theme.sectionBg);
           renderStyleFields();
           renderQuickControls();
@@ -1060,6 +1063,7 @@ function debugHtml(fileName) {
       setPath(currentConfig, "theme.lengths.omrPageMarginTop", quickMargin.value);
       setPath(currentConfig, "theme.lengths.omrPageMarginBottom", quickMargin.value);
       setPath(currentConfig, "theme.lengths.omrPhotoHeight", quickPhoto.value);
+      setPath(currentConfig, "theme.lengths.omrLogoHeight", quickLogo.value);
       renderStyleFields();
     }
 
@@ -1097,6 +1101,7 @@ function debugHtml(fileName) {
     quickLine.addEventListener("input", applyQuickConfig);
     quickMargin.addEventListener("input", applyQuickConfig);
     quickPhoto.addEventListener("input", applyQuickConfig);
+    quickLogo.addEventListener("input", applyQuickConfig);
     saveStyle.addEventListener("click", saveStyleConfig);
     resetStyle.addEventListener("click", loadState);
     renderButton.addEventListener("click", render);
@@ -1156,7 +1161,12 @@ function watchCommand(args) {
 }
 
 function withTexPath(env, texInputs = []) {
-  const additions = ["/Library/TeX/texbin"];
+  const additions = [
+    "/Library/TeX/texbin",
+    path.join("D:", "APP", "MiKTeX", "texmfs", "install", "miktex", "bin", "x64"),
+    path.join(process.env.LOCALAPPDATA || "", "Programs", "MiKTeX", "miktex", "bin", "x64"),
+    path.join(process.env["ProgramFiles"] || path.join("C:", "Program Files"), "MiKTeX", "miktex", "bin", "x64")
+  ];
   const current = env.PATH || "";
   const texmfVar = env.TEXMFVAR || path.join(os.tmpdir(), "oh-my-resume-texmf-var");
   fs.mkdirSync(texmfVar, { recursive: true });
@@ -1172,9 +1182,14 @@ function withTexPath(env, texInputs = []) {
 
 function findCommand(command, env = process.env) {
   const paths = String(env.PATH || "").split(path.delimiter);
+  const exts = process.platform === "win32"
+    ? String(env.PATHEXT || ".exe;.cmd;.bat;.com").split(path.delimiter)
+    : [""];
   for (const dir of paths) {
-    const candidate = path.join(dir, command);
-    if (fs.existsSync(candidate)) return candidate;
+    for (const ext of exts) {
+      const candidate = path.join(dir, command + ext);
+      if (fs.existsSync(candidate)) return candidate;
+    }
   }
   return null;
 }

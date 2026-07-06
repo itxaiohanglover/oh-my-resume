@@ -2,7 +2,7 @@
 name: 文艺倾年
 theme: classic
 avatar: avatar.jpg
-logo: logo.png
+logo: logo2.png
 contacts:
   - 电话：155-0000-0000 | 邮箱：[hello@example.com](mailto:hello@example.com) | 城市：不限
   - GitHub：[github.com/example](https://github.com/example) | 主页：[example.com](https://example.com) | 博客：[blog.example.com](https://blog.example.com)

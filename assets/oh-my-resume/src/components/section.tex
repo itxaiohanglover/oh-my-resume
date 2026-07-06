@@ -12,10 +12,10 @@
     valign=center,
     fontupper=\color{white}\fontsize{\omrSectionFontSize}{\omrSectionLineHeight}\selectfont\bfseries,
     frame code={
-        \fill[omrSectionRule] (frame.south west) -- (frame.north west) -- ([xshift=-16pt]frame.north east) -- (frame.south east) -- cycle;
+        \fill[omrSectionBg] (frame.south west) -- (frame.north west) -- ([xshift=-16pt]frame.north east) -- (frame.south east) -- cycle;
     },
     overlay={
-        \fill[omrSectionRule]
+        \fill[omrSectionBg]
           ([xshift=4pt, yshift=4pt]frame.south east) --
           ([xshift=8pt, yshift=0pt]frame.south east) --
           ({\the\dimexpr\omrSavedLineWidth-0pt\relax}, 0pt) --
