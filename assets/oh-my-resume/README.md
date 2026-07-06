@@ -12,3 +12,19 @@ node assets/oh-my-resume/scripts/cli.js debug resume.md
 ```
 
 Users normally interact with the Skill, not this internal package.
+
+## Windows first-run setup
+
+Run the Windows setup helper before first PDF generation:
+
+```bat
+install.bat
+```
+
+For PowerShell or CI usage:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -PersistUserEnv -VerifyPdf
+```
+
+The script checks Node.js, MiKTeX/XeLaTeX, latexmk, and Strawberry Perl, then runs `node scripts\cli.js doctor`.

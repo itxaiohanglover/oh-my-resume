@@ -19,7 +19,13 @@ node <skill-dir>/assets/oh-my-resume/scripts/cli.js
 
 ## Agent Workflow
 
-1. Run environment checks first:
+1. Run environment checks first. On Windows first-run, prefer the bundled setup helper before `doctor`:
+
+```bat
+<skill-dir>\assets\oh-my-resume\install.bat
+```
+
+Then check the environment:
 
 ```bash
 node <skill-dir>/assets/oh-my-resume/scripts/cli.js doctor

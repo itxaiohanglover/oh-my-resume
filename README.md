@@ -96,6 +96,23 @@ oh-my-resume/
   assets/oh-my-resume/
 ```
 
+### 🪟 Windows 首次使用
+
+Windows 用户第一次生成 PDF 前，建议先准备本地 TeX 环境：
+
+```bat
+cd assets\oh-my-resume
+install.bat
+```
+
+`install.bat` 会调用 `scripts\install.ps1`，刷新当前进程可见的 TeX 路径，保存 `OMR_TEX_PATH` 供后续终端使用，并执行 `node scripts\cli.js doctor`。
+
+PowerShell / CI 可以直接运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -PersistUserEnv -VerifyPdf
+```
+
 ### 🤖 使用 Agent
 
 你可以直接让 Agent 操作：
@@ -204,6 +221,12 @@ Skill 会自动检查：
 ```bash
 brew install --cask mactex-no-gui
 ```
+
+###   Windows
+
+- 安装 MiKTeX Basic: https://miktex.org/download
+- 安装 Strawberry Perl: https://strawberryperl.com/
+- 运行 `assets\oh-my-resume\install.bat`
 
 ###   Ubuntu/Debian
 
