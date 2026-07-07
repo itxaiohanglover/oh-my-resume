@@ -358,7 +358,7 @@ function pdfCommand(args) {
     throw new Error("latexmk not found. Install MacTeX no-GUI or add /Library/TeX/texbin to PATH.");
   }
 
-  const latexmk = spawnSync(latexmkBin, [
+  const latexmk = spawnCommandSync(latexmkBin, [
     "-xelatex",
     "-interaction=nonstopmode",
     "-halt-on-error",
@@ -408,6 +408,12 @@ function debugCommand(args) {
 
     if (req.method === "GET" && requestUrl.pathname === "/") {
       send(res, 200, debugHtml(path.basename(inputPath)));
+      return;
+    }
+
+    if (req.method === "GET" && requestUrl.pathname === "/favicon.ico") {
+      res.writeHead(204, { "Cache-Control": "no-store" });
+      res.end();
       return;
     }
 
@@ -482,7 +488,10 @@ function debugCommand(args) {
     if (req.method === "POST" && requestUrl.pathname === "/api/render") {
       readJsonBody(req)
         .then((body) => {
-          fs.writeFileSync(inputPath, String(body.markdown || ""), "utf8");
+          if (typeof body.markdown !== "string") {
+            throw new Error("Render request must include a markdown string.");
+          }
+          fs.writeFileSync(inputPath, body.markdown, "utf8");
           const result = pdfCommand({ ...args, _: [input], silent: true });
           sendJson(res, 200, {
             ok: true,
@@ -500,7 +509,6 @@ function debugCommand(args) {
         });
       return;
     }
-
     if (req.method === "GET" && requestUrl.pathname === "/pdf") {
       if (!fs.existsSync(pdfPath)) {
         send(res, 404, "PDF has not been generated yet.");
@@ -1439,30 +1447,113 @@ function watchCommand(args) {
   });
 }
 
-function withTexPath(env, texInputs = []) {
-  const additions = [
-    "/Library/TeX/texbin",
-    path.join("D:", "APP", "MiKTeX", "texmfs", "install", "miktex", "bin", "x64"),
-    path.join(process.env.LOCALAPPDATA || "", "Programs", "MiKTeX", "miktex", "bin", "x64"),
-    path.join(process.env["ProgramFiles"] || path.join("C:", "Program Files"), "MiKTeX", "miktex", "bin", "x64")
+function splitPathList(value) {
+  return String(value || "")
+    .split(path.delimiter)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function uniquePathList(items) {
+  const seen = new Set();
+  const result = [];
+  for (const item of items.filter(Boolean)) {
+    const key = process.platform === "win32" ? item.toLowerCase() : item;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
+function expandWindowsEnvVars(value, env = process.env) {
+  return String(value || "").replace(/%([^%]+)%/g, (match, name) => env[name] || match);
+}
+
+let cachedWindowsRegistryPaths;
+
+function readWindowsRegistryPathValues(env = process.env) {
+  if (process.platform !== "win32") return [];
+  if (cachedWindowsRegistryPaths) return cachedWindowsRegistryPaths;
+
+  const queries = [
+    ["HKCU\\Environment", "Path"],
+    ["HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "Path"]
   ];
+  const values = [];
+  for (const [key, valueName] of queries) {
+    const result = spawnSync("reg.exe", ["query", key, "/v", valueName], { encoding: "utf8" });
+    if (result.status !== 0) continue;
+    const line = String(result.stdout || "").split(/\r?\n/).find((item) => new RegExp(`^\\s*${valueName}\\s+REG_`, "i").test(item));
+    if (!line) continue;
+    const match = line.match(/^\s*\S+\s+REG_\S+\s+(.+)$/);
+    if (match) values.push(expandWindowsEnvVars(match[1].trim(), env));
+  }
+  cachedWindowsRegistryPaths = values.flatMap(splitPathList);
+  return cachedWindowsRegistryPaths;
+}
+
+function existingCommonWindowsTexPaths(env = process.env) {
+  if (process.platform !== "win32") return [];
+  const programFiles = env.ProgramFiles || "C:\\Program Files";
+  const programFilesX86 = env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+  const localAppData = env.LOCALAPPDATA || "";
+  const texLiveYears = Array.from({ length: 9 }, (_, index) => String(2020 + index));
+  const candidates = [
+    path.join(programFiles, "MiKTeX", "miktex", "bin", "x64"),
+    path.join(programFilesX86, "MiKTeX", "miktex", "bin", "x64"),
+    localAppData ? path.join(localAppData, "Programs", "MiKTeX", "miktex", "bin", "x64") : "",
+    localAppData ? path.join(localAppData, "MiKTeX", "miktex", "bin", "x64") : "",
+    "D:\\APP\\MiKTeX\\texmfs\\install\\miktex\\bin\\x64",
+    "D:\\MiKTeX\\miktex\\bin\\x64",
+    "E:\\MiKTeX\\miktex\\bin\\x64",
+    "F:\\MiKTeX\\miktex\\bin\\x64",
+    ...texLiveYears.map((year) => `C:\\texlive\\${year}\\bin\\windows`),
+    ...texLiveYears.map((year) => `D:\\texlive\\${year}\\bin\\windows`),
+    ...texLiveYears.map((year) => `E:\\texlive\\${year}\\bin\\windows`),
+    "C:\\Strawberry\\c\\bin",
+    "C:\\Strawberry\\perl\\site\\bin",
+    "C:\\Strawberry\\perl\\bin"
+  ];
+  return candidates.filter((item) => item && fs.existsSync(item));
+}
+
+function withTexPath(env, texInputs = []) {
   const current = env.PATH || "";
+  const explicitTexPath = splitPathList(env.OMR_TEX_PATH || env.OH_MY_RESUME_TEX_PATH);
+  const additions = process.platform === "win32"
+    ? [
+        ...explicitTexPath,
+        ...readWindowsRegistryPathValues(env),
+        ...existingCommonWindowsTexPaths(env)
+      ]
+    : [
+        ...explicitTexPath,
+        "/Library/TeX/texbin"
+      ];
   const texmfVar = env.TEXMFVAR || path.join(os.tmpdir(), "oh-my-resume-texmf-var");
   fs.mkdirSync(texmfVar, { recursive: true });
   const existingTexInputs = env.TEXINPUTS || "";
   const resolvedTexInputs = texInputs.map((item) => path.resolve(item));
   return {
     ...env,
-    PATH: [...additions, current].filter(Boolean).join(path.delimiter),
+    PATH: uniquePathList([...additions, ...splitPathList(current)]).join(path.delimiter),
     TEXINPUTS: [...resolvedTexInputs, existingTexInputs].join(path.delimiter),
     TEXMFVAR: texmfVar
   };
 }
 
+function spawnCommandSync(command, args, options = {}) {
+  const needsShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(command);
+  return spawnSync(command, args, {
+    ...options,
+    shell: needsShell || options.shell
+  });
+}
 function findCommand(command, env = process.env) {
   const paths = String(env.PATH || "").split(path.delimiter);
   const exts = process.platform === "win32"
-    ? String(env.PATHEXT || ".exe;.cmd;.bat;.com").split(path.delimiter)
+    ? ["", ...String(env.PATHEXT || ".EXE;.CMD;.BAT;.COM").split(";").filter(Boolean)]
     : [""];
   for (const dir of paths) {
     for (const ext of exts) {
@@ -1477,7 +1568,7 @@ function commandExists(command) {
   const env = withTexPath(process.env);
   const bin = findCommand(command, env);
   if (!bin) return false;
-  const result = spawnSync(bin, ["--version"], { encoding: "utf8", env });
+  const result = spawnCommandSync(bin, ["--version"], { encoding: "utf8", env });
   return result.status === 0;
 }
 
@@ -1521,9 +1612,18 @@ function main() {
   process.exit(1);
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error.message || error);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message || error);
+    process.exit(1);
+  }
 }
+
+module.exports = {
+  withTexPath,
+  findCommand,
+  commandExists,
+  spawnCommandSync
+};

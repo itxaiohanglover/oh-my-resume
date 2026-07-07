@@ -13,11 +13,13 @@
     "build": "npm run build:tex",
     "debug": "node scripts/cli.js debug examples/resume.md",
     "doctor": "node scripts/cli.js doctor",
-    "check": "node --check scripts/build.js && node --check scripts/cli.js && node scripts/cli.js build examples/resume.md --out build/resume.tex"
+    "test": "node scripts/cli.test.js",
+    "check": "node --check scripts/build.js && node --check scripts/cli.js && npm test && node scripts/cli.js build examples/resume.md --out build/resume.tex"
   },
   "files": [
     "README.md",
     "LICENSE",
+    "install.bat",
     "examples",
     "scripts",
     "src"
