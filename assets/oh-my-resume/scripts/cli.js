@@ -1498,19 +1498,18 @@ function existingCommonWindowsTexPaths(env = process.env) {
   const programFiles = env.ProgramFiles || "C:\\Program Files";
   const programFilesX86 = env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
   const localAppData = env.LOCALAPPDATA || "";
-  const texLiveYears = Array.from({ length: 9 }, (_, index) => String(2020 + index));
+  const systemDrive = env.SystemDrive || "C:";
+  const texLiveRoot = path.join(systemDrive, "texlive");
+  const texLiveBins = fs.existsSync(texLiveRoot)
+    ? fs.readdirSync(texLiveRoot)
+        .map((name) => path.join(texLiveRoot, name, "bin", "windows"))
+    : [];
   const candidates = [
     path.join(programFiles, "MiKTeX", "miktex", "bin", "x64"),
     path.join(programFilesX86, "MiKTeX", "miktex", "bin", "x64"),
     localAppData ? path.join(localAppData, "Programs", "MiKTeX", "miktex", "bin", "x64") : "",
     localAppData ? path.join(localAppData, "MiKTeX", "miktex", "bin", "x64") : "",
-    "D:\\APP\\MiKTeX\\texmfs\\install\\miktex\\bin\\x64",
-    "D:\\MiKTeX\\miktex\\bin\\x64",
-    "E:\\MiKTeX\\miktex\\bin\\x64",
-    "F:\\MiKTeX\\miktex\\bin\\x64",
-    ...texLiveYears.map((year) => `C:\\texlive\\${year}\\bin\\windows`),
-    ...texLiveYears.map((year) => `D:\\texlive\\${year}\\bin\\windows`),
-    ...texLiveYears.map((year) => `E:\\texlive\\${year}\\bin\\windows`),
+    ...texLiveBins,
     "C:\\Strawberry\\c\\bin",
     "C:\\Strawberry\\perl\\site\\bin",
     "C:\\Strawberry\\perl\\bin"

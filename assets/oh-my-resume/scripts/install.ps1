@@ -38,18 +38,19 @@ function Get-RegistryPathEntries {
 }
 
 function Get-ExistingCandidatePaths {
-  $texLiveYears = 2020..2028 | ForEach-Object { $_.ToString() }
+  $systemDrive = if ([string]::IsNullOrWhiteSpace($env:SystemDrive)) { 'C:' } else { $env:SystemDrive }
+  $texLiveRoot = Join-Path $systemDrive 'texlive'
+  $texLiveBins = @()
+  if (Test-Path -LiteralPath $texLiveRoot) {
+    $texLiveBins = Get-ChildItem -LiteralPath $texLiveRoot -Directory -ErrorAction SilentlyContinue |
+      ForEach-Object { Join-Path $_.FullName 'bin\windows' }
+  }
   $candidates = @(
     "$env:ProgramFiles\MiKTeX\miktex\bin\x64",
     "${env:ProgramFiles(x86)}\MiKTeX\miktex\bin\x64",
     "$env:LOCALAPPDATA\Programs\MiKTeX\miktex\bin\x64",
     "$env:LOCALAPPDATA\MiKTeX\miktex\bin\x64",
-    "D:\MiKTeX\miktex\bin\x64",
-    "E:\MiKTeX\miktex\bin\x64",
-    "F:\MiKTeX\miktex\bin\x64",
-    ($texLiveYears | ForEach-Object { "C:\texlive\$_\bin\windows" }),
-    ($texLiveYears | ForEach-Object { "D:\texlive\$_\bin\windows" }),
-    ($texLiveYears | ForEach-Object { "E:\texlive\$_\bin\windows" }),
+    $texLiveBins,
     "C:\Strawberry\c\bin",
     "C:\Strawberry\perl\site\bin",
     "C:\Strawberry\perl\bin"
