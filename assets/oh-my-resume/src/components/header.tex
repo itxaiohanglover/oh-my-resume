@@ -9,6 +9,11 @@
 \newcommand{\linkedin}[2][]{\faLinkedin\ \ifthenelse{\isempty{#1}}{\href{#2}{#2}}{\href{#2}{#1}}}
 \newcommand{\github}[2][]{\faGithub\ \ifthenelse{\isempty{#1}}{\href{#2}{#2}}{\href{#2}{#1}}}
 \newcommand{\homepage}[2][]{\faLink\ \ifthenelse{\isempty{#1}}{\href{#2}{#2}}{\href{#2}{#1}}}
+\newcommand{\omrHeaderText}[2]{%
+  \ifthenelse{\equal{\omrHeaderAlign}{left}}{\raggedright}{\centering}%
+  \omrName{#1}%
+  #2%
+}
 
 \newcommand{\omrHeader}[4]{%
   \noindent
@@ -18,20 +23,17 @@
   \ifthenelse{\isempty{#3}}{%
     \begin{minipage}[t]{\linewidth}
       \vspace{0pt}
-      \omrName{#1}
-      #2
+      \omrHeaderText{#1}{#2}
     \end{minipage}%
   }{%
-    \begin{minipage}[c][\omrPhotoHeight][c]{\linewidth}
-      \centering
-      \omrName{#1}
-      #2
+    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\linewidth-\omrPhotoWidth-\omrHeaderGap-\omrPhotoRightInset\relax}
+      \vspace{0pt}
+      \omrHeaderText{#1}{#2}
     \end{minipage}%
-    \llap{%
-      \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
-        \raggedleft
-        \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
-      \end{minipage}%
-    }%
+    \hfill
+    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
+      \raggedleft
+      \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
+    \end{minipage}%
   }%
 }

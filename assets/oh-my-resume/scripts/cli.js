@@ -9,6 +9,115 @@ const { URL } = require("url");
 const { buildResume } = require("./build");
 
 const packageRoot = path.resolve(__dirname, "..");
+const builtInStylePresets = {
+  classic: {
+    label: "经典默认",
+    config: {
+      theme: {
+        colors: {
+          omrTagBg: "232,241,255",
+          omrTagText: "37,99,235",
+          omrSectionBg: "31,41,55",
+          omrLinkColor: "37,99,235"
+        },
+        lengths: {
+          omrPageMarginLeft: "8mm",
+          omrPageMarginRight: "8mm",
+          omrPageMarginTop: "8mm",
+          omrPageMarginBottom: "8mm",
+          omrHeaderGap: "7mm",
+          omrHeaderNameGap: "0.41em",
+          omrHeaderLineGap: "0.1em"
+        },
+        fonts: {
+          omrBodyFont: "TeX Gyre Termes",
+          omrCJKMainFont: "Kaiti SC"
+        },
+        sizes: {
+          omrBodyFontSize: "11.2pt",
+          omrBodyLineHeight: "14.5pt",
+          omrHOneFontSize: "16.9pt",
+          omrHOneLineHeight: "19pt",
+          omrSectionFontSize: "12.1pt",
+          omrSectionLineHeight: "14.2pt",
+          omrEntryFontSize: "10.5pt",
+          omrEntryLineHeight: "13pt"
+        },
+        options: {
+          omrHeaderAlign: "left"
+        }
+      }
+    }
+  },
+  compact: {
+    label: "紧凑一页",
+    config: {
+      theme: {
+        lengths: {
+          omrPageMarginLeft: "7mm",
+          omrPageMarginRight: "7mm",
+          omrPageMarginTop: "7mm",
+          omrPageMarginBottom: "6mm",
+          omrSectionBefore: "0.42em",
+          omrSectionAfter: "0.42em",
+          omrEntryBefore: "0.16em",
+          omrEntryAfter: "0.12em"
+        },
+        sizes: {
+          omrBodyFontSize: "10.4pt",
+          omrBodyLineHeight: "13.5pt",
+          omrEntryFontSize: "10.2pt",
+          omrEntryLineHeight: "12.6pt"
+        }
+      }
+    }
+  },
+  currentComfort: {
+    label: "当前舒适版",
+    config: {
+      theme: {
+        colors: {
+          omrTagBg: "243,244,246",
+          omrTagText: "17,24,39",
+          omrSectionBg: "17,24,39",
+          omrLinkColor: "17,24,39"
+        },
+        lengths: {
+          omrPageMarginLeft: "8mm",
+          omrPageMarginRight: "8mm",
+          omrPageMarginTop: "8mm",
+          omrPageMarginBottom: "8mm",
+          omrHeaderNameGap: "0.41em",
+          omrHeaderLineGap: "0.1em",
+          omrTitleBodyGap: "0.38em",
+          omrHeadingOneBefore: "0.42em",
+          omrHeadingOneAfter: "0.22em",
+          omrSectionBefore: "0.58em",
+          omrSectionAfter: "0.54em",
+          omrEntryBefore: "0.23em",
+          omrEntryAfter: "0.22em"
+        },
+        fonts: {
+          omrBodyFont: "TeX Gyre Termes",
+          omrCJKMainFont: "Kaiti SC"
+        },
+        sizes: {
+          omrBodyFontSize: "10.9pt",
+          omrBodyLineHeight: "14.2pt",
+          omrHOneFontSize: "16.9pt",
+          omrHOneLineHeight: "19pt",
+          omrSectionFontSize: "12.1pt",
+          omrSectionLineHeight: "14.2pt",
+          omrEntryFontSize: "10.5pt",
+          omrEntryLineHeight: "13pt"
+        },
+        options: {
+          omrHeaderAlign: "left"
+        }
+      }
+    }
+  }
+};
 
 function usage() {
   console.log(`oh-my-resume
@@ -116,6 +225,9 @@ function initProject(targetDir) {
               omrSectionLineHeight: "14.2pt",
               omrEntryFontSize: "10.5pt",
               omrEntryLineHeight: "13pt"
+            },
+            options: {
+              omrHeaderAlign: "left"
             }
           }
         },
@@ -135,6 +247,64 @@ function loadConfig(cwd, configPath) {
   const file = path.resolve(cwd, configPath || "omr.config.json");
   if (!fs.existsSync(file)) return {};
   return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function deepMerge(base, override) {
+  const result = Array.isArray(base) ? [...base] : { ...(base || {}) };
+  for (const [key, value] of Object.entries(override || {})) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      result[key] = deepMerge(result[key] || {}, value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+function listLocalStylePresets(cwd) {
+  const dir = path.resolve(cwd, "omr.styles");
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir)
+    .filter((name) => name.endsWith(".json"))
+    .sort()
+    .map((name) => ({
+      id: `local:${name}`,
+      label: name.replace(/\.json$/i, ""),
+      path: path.join("omr.styles", name)
+    }));
+}
+
+function listStylePresets(cwd) {
+  const builtIns = Object.entries(builtInStylePresets).map(([id, preset]) => ({
+    id,
+    label: preset.label,
+    builtin: true
+  }));
+  return [...builtIns, ...listLocalStylePresets(cwd)];
+}
+
+function readStylePreset(cwd, presetId, presetPath) {
+  if (presetPath) {
+    const file = path.resolve(cwd, presetPath);
+    if (!fs.existsSync(file)) throw new Error(`Style config not found: ${presetPath}`);
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  }
+  if (presetId && presetId.startsWith("local:")) {
+    const fileName = presetId.slice("local:".length);
+    const file = path.resolve(cwd, "omr.styles", fileName);
+    if (!fs.existsSync(file)) throw new Error(`Style preset not found: ${fileName}`);
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  }
+  const preset = builtInStylePresets[presetId];
+  if (!preset) throw new Error(`Unknown style preset: ${presetId || ""}`);
+  return preset.config;
+}
+
+function mergeStylePreset(current, presetConfig) {
+  return deepMerge(current || {}, {
+    theme: presetConfig.theme || {},
+    markdown: presetConfig.markdown || {}
+  });
 }
 
 function resolveMarkdownInput(cwd, config, explicitInput) {
@@ -247,8 +417,39 @@ function debugCommand(args) {
         pdf: path.relative(cwd, pdfPath),
         markdown: fs.readFileSync(inputPath, "utf8"),
         config: normalizeDebugConfig(loadConfig(cwd, args.config)),
+        configPath: path.relative(cwd, configPath),
         pdfUrl: fs.existsSync(pdfPath) ? `/pdf?ts=${Date.now()}` : null
       });
+      return;
+    }
+
+    if (req.method === "GET" && requestUrl.pathname === "/api/presets") {
+      sendJson(res, 200, {
+        configPath: path.relative(cwd, configPath),
+        presets: listStylePresets(cwd)
+      });
+      return;
+    }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/apply-preset") {
+      readJsonBody(req)
+        .then((body) => {
+          const current = loadConfig(cwd, args.config);
+          const preset = readStylePreset(cwd, String(body.preset || ""), String(body.path || "").trim());
+          const next = mergeStylePreset(current, preset);
+          fs.writeFileSync(configPath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+          sendJson(res, 200, {
+            ok: true,
+            config: normalizeDebugConfig(next),
+            path: path.relative(cwd, configPath)
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 500, {
+            ok: false,
+            error: trimError(error.message || String(error))
+          });
+        });
       return;
     }
 
@@ -375,6 +576,10 @@ omrLinkColor: "37,99,235",
         omrEntryFontSize: "10.5pt",
         omrEntryLineHeight: "13pt",
         ...(theme.sizes || {})
+      },
+      options: {
+        omrHeaderAlign: "left",
+        ...(theme.options || {})
       }
     },
     markdown: {
@@ -394,7 +599,8 @@ function mergeDebugConfig(current, incoming) {
       colors: cleanObject(normalized.theme.colors, isRgb),
       lengths: cleanObject(normalized.theme.lengths, isLength),
       fonts: cleanObject(normalized.theme.fonts, isFontName),
-      sizes: cleanObject(normalized.theme.sizes, isFontSize)
+      sizes: cleanObject(normalized.theme.sizes, isFontSize),
+      options: cleanObject(normalized.theme.options, isThemeOption)
     },
     markdown: {
       ...(current.markdown || {}),
@@ -433,6 +639,10 @@ function isFontName(value) {
 
 function isFontSize(value) {
   return /^[0-9.]+pt$/.test(value);
+}
+
+function isThemeOption(value) {
+  return ["left", "center"].includes(String(value).trim());
 }
 
 function readJsonBody(req) {
@@ -820,8 +1030,17 @@ function debugHtml(fileName) {
     <div class="styleBody">
       <div class="quickMenu">
         <section class="settingsSection">
+          <p class="settingsTitle">模板</p>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">样式预设</span><select id="presetSelect"></select></span>
+            <span class="menuItem"><span class="menuIcon">本地配置</span><input id="presetPath" placeholder="omr.styles/my-style.json"></span>
+            <button class="ghost" id="applyPreset" type="button">应用模板</button>
+          </div>
+        </section>
+        <section class="settingsSection">
           <p class="settingsTitle">版式</p>
           <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">头部对齐</span><select id="quickHeaderAlign"></select></span>
             <span class="menuItem"><span class="menuIcon">页边距</span><input id="quickMargin" placeholder="8mm"></span>
           </div>
         </section>
@@ -873,15 +1092,24 @@ function debugHtml(fileName) {
     const saveStyle = document.getElementById("saveStyle");
     const resetStyle = document.getElementById("resetStyle");
     const styleGrid = document.getElementById("styleGrid");
+    const presetSelect = document.getElementById("presetSelect");
+    const presetPath = document.getElementById("presetPath");
+    const applyPreset = document.getElementById("applyPreset");
     const quickFont = document.getElementById("quickFont");
     const quickSize = document.getElementById("quickSize");
     const quickLine = document.getElementById("quickLine");
     const quickMargin = document.getElementById("quickMargin");
     const quickPhoto = document.getElementById("quickPhoto");
     const quickLogo = document.getElementById("quickLogo");
+    const quickHeaderAlign = document.getElementById("quickHeaderAlign");
     const quickTheme = document.getElementById("quickTheme");
     let currentConfig = null;
+    let currentConfigPath = "omr.config.json";
 
+    const alignOptions = [
+      ["left", "靠左"],
+      ["center", "居中"]
+    ];
     const fontOptions = [
       ["Songti SC", "宋体"],
       ["Kaiti SC", "楷体"],
@@ -926,6 +1154,7 @@ function debugHtml(fileName) {
       ["theme.sizes.omrHOneFontSize", "一级标题字号"],
       ["theme.sizes.omrSectionFontSize", "二级标题字号"],
       ["theme.sizes.omrEntryFontSize", "三级标题字号"],
+      ["theme.options.omrHeaderAlign", "头部对齐(left/center)"],
       ["markdown.dateFields", "日期字段名"],
       ["markdown.tagFields", "标签字段名"]
     ];
@@ -935,8 +1164,10 @@ function debugHtml(fileName) {
       const state = await response.json();
       editor.value = state.markdown;
       currentConfig = state.config;
+      currentConfigPath = state.configPath || "omr.config.json";
       renderStyleFields();
       renderQuickControls();
+      await renderPresetControls();
       paths.textContent = state.input + " -> " + state.pdf;
       if (state.pdfUrl) showPdf(state.pdfUrl);
     }
@@ -989,6 +1220,7 @@ function debugHtml(fileName) {
     }
 
     function renderQuickControls() {
+      fillSelect(quickHeaderAlign, alignOptions, getPath(currentConfig, "theme.options.omrHeaderAlign"));
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
       quickSize.value = getPath(currentConfig, "theme.sizes.omrBodyFontSize");
       quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");
@@ -1026,6 +1258,23 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       }
     }
 
+    async function renderPresetControls() {
+      const response = await fetch("/api/presets");
+      const data = await response.json();
+      presetSelect.innerHTML = "";
+      const current = document.createElement("option");
+      current.value = "";
+      current.textContent = "保持当前配置";
+      presetSelect.appendChild(current);
+      for (const preset of data.presets || []) {
+        const option = document.createElement("option");
+        option.value = preset.id;
+        option.textContent = preset.builtin ? preset.label : "本地：" + preset.label;
+        presetSelect.appendChild(option);
+      }
+      presetPath.placeholder = data.configPath || currentConfigPath;
+    }
+
     function getPath(source, path) {
       const parts = path.split(".");
       let value = source;
@@ -1053,11 +1302,10 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     }
 
     function applyQuickConfig() {
+      setPath(currentConfig, "theme.options.omrHeaderAlign", quickHeaderAlign.value);
       setPath(currentConfig, "theme.fonts.omrCJKMainFont", quickFont.value);
       setPath(currentConfig, "theme.sizes.omrBodyFontSize", quickSize.value);
-      setPath(currentConfig, "theme.sizes.omrEntryFontSize", quickSize.value);
       setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value);
-      setPath(currentConfig, "theme.sizes.omrEntryLineHeight", quickLine.value);
       setPath(currentConfig, "theme.lengths.omrPageMarginLeft", quickMargin.value);
       setPath(currentConfig, "theme.lengths.omrPageMarginRight", quickMargin.value);
       setPath(currentConfig, "theme.lengths.omrPageMarginTop", quickMargin.value);
@@ -1093,9 +1341,40 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       }
     }
 
+    async function applyStylePreset() {
+      applyPreset.disabled = true;
+      message.className = "";
+      message.textContent = "正在应用模板...";
+      try {
+        const response = await fetch("/api/apply-preset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            preset: presetSelect.value,
+            path: presetPath.value
+          })
+        });
+        const data = await response.json();
+        if (!data.ok) throw new Error(data.error || "模板应用失败。");
+        currentConfig = data.config;
+        renderStyleFields();
+        renderQuickControls();
+        message.textContent = "已应用模板 " + data.path;
+      } catch (error) {
+        message.className = "error";
+        message.textContent = "模板应用失败";
+        errorText.textContent = error.message || String(error);
+        errorDialog.showModal();
+      } finally {
+        applyPreset.disabled = false;
+      }
+    }
+
     closeError.addEventListener("click", () => errorDialog.close());
     closeStyle.addEventListener("click", () => styleDialog.close());
     styleButton.addEventListener("click", () => styleDialog.showModal());
+    applyPreset.addEventListener("click", applyStylePreset);
+    quickHeaderAlign.addEventListener("change", applyQuickConfig);
     quickFont.addEventListener("change", applyQuickConfig);
     quickSize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);

@@ -74,6 +74,7 @@
 \newcommand{\omrEntryLineHeight}{13pt}
 \newcommand{\omrHFourFontSize}{10pt}
 \newcommand{\omrHFourLineHeight}{13pt}
+\newcommand{\omrHeaderAlign}{center}
 
 \newcommand{\omrApplyLayout}{%
   \newgeometry{
@@ -104,7 +105,6 @@
 \newcommand{\omrApplyBaseStyles}{%
   \omrApplyLayout
   \omrApplyFonts
-  \fontsize{\omrBodyFontSize}{\omrBodyLineHeight}\selectfont
   \setlist{noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt}
   \setlist[itemize]{topsep=1pt, partopsep=0pt, parsep=1.2pt, itemsep=1.2pt, leftmargin=1.4pc}
   \setlist[enumerate]{topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt, leftmargin=1.5pc}
@@ -112,6 +112,10 @@
   \titlespacing*{\section}{0cm}{*0.9}{*0.25}
   \titleformat{\subsection}{\normalsize\bfseries\raggedright}{}{0em}{}
   \titlespacing*{\subsection}{0cm}{0pt}{0pt}
+}
+
+\newcommand{\omrApplyDocumentStyles}{%
+  \fontsize{\omrBodyFontSize}{\omrBodyLineHeight}\selectfont
 }
 
 \endinput

@@ -345,6 +345,13 @@ function renderOverrides(overrides = {}) {
     }
   }
 
+  const options = overrides.options || {};
+  for (const [name, value] of Object.entries(options)) {
+    if (/^[A-Za-z][A-Za-z0-9]*$/.test(name) && /^[A-Za-z][A-Za-z0-9_-]*$/.test(String(value))) {
+      lines.push(`\\renewcommand{\\${name}}{${String(value)}}`);
+    }
+  }
+
   return lines.join("\n");
 }
 
@@ -380,6 +387,8 @@ ${overrides}
 \\omrApplyBaseStyles
 
 \\begin{document}
+
+\\omrApplyDocumentStyles
 
 \\omrHeader{${inline(meta.name || "Your Name")}}{
     ${renderContactLines(meta)}

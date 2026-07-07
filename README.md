@@ -189,6 +189,35 @@ debug 服务会一直运行，直到你手动停止进程。
 
 如果需要完全自定义主题，可以在初始化后复制并编辑 `themes/classic.tex`。
 
+### 样式优先级
+
+Oh My Resume 会优先读取当前工作目录的本地配置：
+
+1. 命令行传入的 `--config path/to/config.json`
+2. 当前目录的 `omr.config.json`
+3. Skill 内置默认配置
+
+因此 Skill 更新不会覆盖你的当前简历样式。只要 `omr.config.json` 留在简历目录下，它就会优先覆盖内置推荐值。
+
+### 样式预设
+
+可以把常用样式保存到当前目录的 `omr.styles/`：
+
+```text
+omr.styles/
+  current-comfort.json
+  compact.json
+  interview.json
+```
+
+Debug 页面的「样式设置 -> 模板」会自动读取 `omr.styles/*.json`。你也可以在「本地配置」里填写任意相对路径，例如：
+
+```text
+omr.styles/current-comfort.json
+```
+
+应用模板只会合并 `theme` 和 `markdown` 配置，不会修改 Markdown 正文、输入路径或输出路径。
+
 ---
 
 ##  环境要求
