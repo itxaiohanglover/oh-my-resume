@@ -587,6 +587,7 @@ omrLinkColor: "37,99,235",
       },
       options: {
         omrHeaderAlign: "left",
+        sectionStyle: "classic",
         ...(theme.options || {})
       }
     },
@@ -650,7 +651,7 @@ function isFontSize(value) {
 }
 
 function isThemeOption(value) {
-  return ["left", "center", "advanced", "simple"].includes(String(value).trim());
+  return ["left", "center", "refined", "simple", "classic", "premium", "minimal", "professional"].includes(String(value).trim());
 }
 
 function readJsonBody(req) {
@@ -1124,8 +1125,12 @@ function debugHtml(fileName) {
       ["center", "居中"]
     ];
     const sectionStyleOptions = [
-      ["advanced", "精致"],
-      ["simple", "简洁"]
+      ["minimal", "Minimal"],
+      ["simple", "Simple"],
+      ["classic", "Classic"],
+      ["premium", "Premium"],
+      ["refined", "Refined"],
+      ["professional", "Professional"]
     ];
     const fontOptions = [
       ["Songti SC", "宋体"],
@@ -1177,7 +1182,7 @@ function debugHtml(fileName) {
       ["theme.sizes.omrSectionFontSize", "二级标题字号"],
       ["theme.sizes.omrEntryFontSize", "三级标题字号"],
       ["theme.options.omrHeaderAlign", "头部对齐(left/center)"],
-      ["theme.options.sectionStyle", "二级标题风格(advanced/simple)"],
+      ["theme.options.sectionStyle", "二级标题风格(跟随下拉)"],
       ["markdown.dateFields", "日期字段名"],
       ["markdown.tagFields", "标签字段名"]
     ];
@@ -1244,7 +1249,7 @@ function debugHtml(fileName) {
 
     function renderQuickControls() {
       fillSelect(quickHeaderAlign, alignOptions, getPath(currentConfig, "theme.options.omrHeaderAlign"));
-      fillSelect(quickSectionStyle, sectionStyleOptions, getPath(currentConfig, "theme.options.sectionStyle") || "advanced");
+      fillSelect(quickSectionStyle, sectionStyleOptions, getPath(currentConfig, "theme.options.sectionStyle") || "classic");
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
       quickSize.value = getPath(currentConfig, "theme.sizes.omrBodyFontSize");
       quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");

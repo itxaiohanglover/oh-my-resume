@@ -37,6 +37,7 @@
 \definecolor{omrTagText}{RGB}{79,139,255}
 \definecolor{omrSectionBg}{RGB}{245,246,248}
 \definecolor{omrSectionRule}{RGB}{30,35,45}
+\definecolor{omrClassicBg}{RGB}{242,242,242}
 \definecolor{omrTextMuted}{RGB}{75,85,99}
 \definecolor{omrLinkColor}{RGB}{40,88,160}
 
@@ -75,7 +76,7 @@
 \newcommand{\omrHFourFontSize}{10pt}
 \newcommand{\omrHFourLineHeight}{13pt}
 \newcommand{\omrHeaderAlign}{center}
-\newcommand{\sectionStyle}{advanced}
+\newcommand{\sectionStyle}{classic}
 
 \newcommand{\omrApplyLayout}{%
   \newgeometry{
