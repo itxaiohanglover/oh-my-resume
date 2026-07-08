@@ -26,14 +26,15 @@
       \omrHeaderText{#1}{#2}
     \end{minipage}%
   }{%
-    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\linewidth-\omrPhotoWidth-\omrHeaderGap-\omrPhotoRightInset\relax}
+    \begin{minipage}[c][\omrPhotoHeight][c]{\linewidth}
       \vspace{0pt}
       \omrHeaderText{#1}{#2}
     \end{minipage}%
-    \hfill
-    \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
-      \raggedleft
-      \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
-    \end{minipage}%
+    \llap{%
+      \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
+        \raggedleft
+        \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
+      \end{minipage}%
+    }%
   }%
 }
