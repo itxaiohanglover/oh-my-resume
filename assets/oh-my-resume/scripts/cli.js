@@ -650,7 +650,7 @@ function isFontSize(value) {
 }
 
 function isThemeOption(value) {
-  return ["left", "center"].includes(String(value).trim());
+  return ["left", "center", "advanced", "simple"].includes(String(value).trim());
 }
 
 function readJsonBody(req) {
@@ -1049,6 +1049,7 @@ function debugHtml(fileName) {
           <p class="settingsTitle">版式</p>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">头部对齐</span><select id="quickHeaderAlign"></select></span>
+            <span class="menuItem"><span class="menuIcon">风格切换</span><select id="quickSectionStyle"></select></span>
             <span class="menuItem"><span class="menuIcon">页边距</span><input id="quickMargin" placeholder="8mm"></span>
           </div>
         </section>
@@ -1111,6 +1112,7 @@ function debugHtml(fileName) {
     const quickPhoto = document.getElementById("quickPhoto");
     const quickLogo = document.getElementById("quickLogo");
     const quickHeaderAlign = document.getElementById("quickHeaderAlign");
+    const quickSectionStyle = document.getElementById("quickSectionStyle");
     const quickTheme = document.getElementById("quickTheme");
     const customColor = document.getElementById("customColor");
     const applyCustomColor = document.getElementById("applyCustomColor");
@@ -1120,6 +1122,10 @@ function debugHtml(fileName) {
     const alignOptions = [
       ["left", "靠左"],
       ["center", "居中"]
+    ];
+    const sectionStyleOptions = [
+      ["advanced", "精致"],
+      ["simple", "简洁"]
     ];
     const fontOptions = [
       ["Songti SC", "宋体"],
@@ -1171,6 +1177,7 @@ function debugHtml(fileName) {
       ["theme.sizes.omrSectionFontSize", "二级标题字号"],
       ["theme.sizes.omrEntryFontSize", "三级标题字号"],
       ["theme.options.omrHeaderAlign", "头部对齐(left/center)"],
+      ["theme.options.sectionStyle", "二级标题风格(advanced/simple)"],
       ["markdown.dateFields", "日期字段名"],
       ["markdown.tagFields", "标签字段名"]
     ];
@@ -1237,6 +1244,7 @@ function debugHtml(fileName) {
 
     function renderQuickControls() {
       fillSelect(quickHeaderAlign, alignOptions, getPath(currentConfig, "theme.options.omrHeaderAlign"));
+      fillSelect(quickSectionStyle, sectionStyleOptions, getPath(currentConfig, "theme.options.sectionStyle") || "advanced");
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
       quickSize.value = getPath(currentConfig, "theme.sizes.omrBodyFontSize");
       quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");
@@ -1319,6 +1327,7 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
 
     function applyQuickConfig() {
       setPath(currentConfig, "theme.options.omrHeaderAlign", quickHeaderAlign.value);
+      setPath(currentConfig, "theme.options.sectionStyle", quickSectionStyle.value);
       setPath(currentConfig, "theme.fonts.omrCJKMainFont", quickFont.value);
       setPath(currentConfig, "theme.sizes.omrBodyFontSize", quickSize.value);
       setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value);
@@ -1391,6 +1400,7 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     styleButton.addEventListener("click", () => styleDialog.showModal());
     applyPreset.addEventListener("click", applyStylePreset);
     quickHeaderAlign.addEventListener("change", applyQuickConfig);
+    quickSectionStyle.addEventListener("change", applyQuickConfig);
     quickFont.addEventListener("change", applyQuickConfig);
     quickSize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);

@@ -75,6 +75,7 @@
 \newcommand{\omrHFourFontSize}{10pt}
 \newcommand{\omrHFourLineHeight}{13pt}
 \newcommand{\omrHeaderAlign}{center}
+\newcommand{\sectionStyle}{advanced}
 
 \newcommand{\omrApplyLayout}{%
   \newgeometry{

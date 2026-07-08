@@ -1,4 +1,5 @@
-\newcommand{\omrSection}[1]{%
+% Advanced style: trapezoid block + horizontal line
+\newcommand{\omrSectionAdvanced}[1]{%
   \vspace{\omrSectionBefore}
   \setlength{\omrSavedLineWidth}{\linewidth}%
   \begin{tcolorbox}[
@@ -30,4 +31,21 @@
   \vspace{\omrSectionAfter}
 }
 
-\newcommand{\sectioncard}[1]{\omrSection{#1}}
+% Simple style: colored text + full-width underline
+\newcommand{\omrSectionSimple}[1]{%
+  \vspace{\omrSectionBefore}
+  \noindent
+  {\fontsize{\omrSectionFontSize}{\omrSectionLineHeight}\selectfont\bfseries\color{omrSectionBg}#1}
+  \vspace{-4pt}\par\vspace{-4pt}
+  \noindent\textcolor{omrSectionBg}{\rule{\linewidth}{1.2pt}}
+  \par\vspace{-2pt}
+}
+
+% Router — \sectionStyle default defined in oh-my-resume.cls, overridden by renderOverrides
+\newcommand{\sectioncard}[1]{%
+  \ifthenelse{\equal{\sectionStyle}{simple}}{%
+    \omrSectionSimple{#1}%
+  }{%
+    \omrSectionAdvanced{#1}%
+  }%
+}
