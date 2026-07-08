@@ -868,23 +868,28 @@ function debugHtml(fileName) {
     }
     .quickMenu {
       display: grid;
-      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      grid-template-columns: 1fr;
       gap: 12px;
       margin-bottom: 14px;
     }
     .settingsSection {
+      display: flex;
+      align-items: center;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px;
       background: #fff;
+      gap: 8px;
+      width: 600px;
     }
     .settingsTitle {
-      margin: 0 0 9px;
+      margin: 0;
       color: var(--muted);
       font-size: 12px;
       font-weight: 750;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      white-space: nowrap;
     }
     .settingsRow {
       display: flex;
@@ -1160,15 +1165,8 @@ function debugHtml(fileName) {
       ["theme.lengths.omrPageMarginRight", "右页边距"],
       ["theme.lengths.omrPageMarginTop", "上页边距"],
       ["theme.lengths.omrPageMarginBottom", "下页边距"],
-      ["theme.lengths.omrPhotoWidth", "照片宽度"],
-      ["theme.lengths.omrPhotoHeight", "照片高度"],
+["theme.lengths.omrPhotoHeight", "照片高度"],
       ["theme.lengths.omrLogoHeight", "学校logo高度"],
-      ["theme.lengths.omrHeaderGap", "头部文字与照片间距"],
-      ["theme.lengths.omrHeaderNameGap", "姓名到联系方式间距"],
-      ["theme.lengths.omrHeaderLineGap", "联系方式行距"],
-      ["theme.lengths.omrTitleBodyGap", "标题到正文间距"],
-      ["theme.lengths.omrHeadingOneBefore", "一级标题上间距"],
-      ["theme.lengths.omrHeadingOneAfter", "一级标题下间距"],
       ["theme.lengths.omrSectionBefore", "二级标题上间距"],
       ["theme.lengths.omrSectionAfter", "二级标题下间距"],
       ["theme.lengths.omrEntryBefore", "三级标题上间距"],
@@ -1178,8 +1176,7 @@ function debugHtml(fileName) {
       ["theme.fonts.omrBodyFont", "英文字体"],
       ["theme.fonts.omrCJKMainFont", "中文字体"],
       ["theme.sizes.omrBodyFontSize", "正文/列表字号"],
-      ["theme.sizes.omrHOneFontSize", "一级标题字号"],
-      ["theme.sizes.omrSectionFontSize", "二级标题字号"],
+["theme.sizes.omrSectionFontSize", "二级标题字号"],
       ["theme.sizes.omrEntryFontSize", "三级标题字号"],
       ["theme.options.omrHeaderAlign", "头部对齐(left/center)"],
       ["theme.options.sectionStyle", "二级标题风格(跟随下拉)"],
