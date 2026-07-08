@@ -1063,7 +1063,8 @@ function debugHtml(fileName) {
         <section class="settingsSection">
           <p class="settingsTitle">主题</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">颜色</span><span class="swatches" id="quickTheme"></span></span>
+            <span class="menuItem"><span class="menuIcon">预设</span><span class="swatches" id="quickTheme"></span></span>
+            <span class="menuItem"><span class="menuIcon">自定义RGB</span><input id="customColor" placeholder="R,G,B" style="width:80px"><button type="button" id="applyCustomColor" style="height:24px;font-size:11px;padding:0 8px;">应用</button></span>
           </div>
         </section>
         <section class="settingsSection">
@@ -1111,6 +1112,8 @@ function debugHtml(fileName) {
     const quickLogo = document.getElementById("quickLogo");
     const quickHeaderAlign = document.getElementById("quickHeaderAlign");
     const quickTheme = document.getElementById("quickTheme");
+    const customColor = document.getElementById("customColor");
+    const applyCustomColor = document.getElementById("applyCustomColor");
     let currentConfig = null;
     let currentConfigPath = "omr.config.json";
 
@@ -1124,6 +1127,11 @@ function debugHtml(fileName) {
       ["PingFang SC", "苹方"],
       ["Noto Serif CJK SC", "Noto Serif"]
     ];
+    function calcTagBg(rgb) {
+      const parts = rgb.split(",").map(n => Math.round(parseInt(n.trim()) * 0.1 + 229.5));
+      return parts.join(",");
+    }
+
     const themeOptions = [
       { name: "blue", color: "37,99,235", tagBg: "232,241,255", sectionBg: "37,99,235" },
       { name: "black", color: "17,24,39", tagBg: "243,244,246", sectionBg: "17,24,39" },
@@ -1390,6 +1398,25 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     quickPhoto.addEventListener("input", applyQuickConfig);
     quickLogo.addEventListener("input", applyQuickConfig);
     saveStyle.addEventListener("click", saveStyleConfig);
+    applyCustomColor.addEventListener("click", () => {
+      const raw = customColor.value;
+      const rgb = raw.replace(/[，]/g, ",").trim();
+      const parts = rgb.split(",").map(s => s.trim());
+      if (parts.length !== 3 || parts.some(p => isNaN(p) || p === "" || parseInt(p) < 0 || parseInt(p) > 255)) {
+        message.className = "error";
+        message.textContent = "请输入有效RGB值，如: 100,150,200 (当前输入: " + raw + ")";
+        return;
+      }
+      const tagBg = calcTagBg(rgb);
+      setPath(currentConfig, "theme.colors.omrTagText", rgb);
+      setPath(currentConfig, "theme.colors.omrLinkColor", rgb);
+      setPath(currentConfig, "theme.colors.omrTagBg", tagBg);
+      setPath(currentConfig, "theme.colors.omrSectionBg", rgb);
+      renderStyleFields();
+      renderQuickControls();
+      message.className = "";
+      message.textContent = "已应用自定义颜色";
+    });
     resetStyle.addEventListener("click", loadState);
     renderButton.addEventListener("click", render);
     setInterval(() => fetch("/api/ping", { method: "POST" }).catch(() => {}), 2000);
