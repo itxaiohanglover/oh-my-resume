@@ -134,6 +134,9 @@ Skill 会完成：
 ```bash
 node assets/oh-my-resume/scripts/cli.js doctor
 node assets/oh-my-resume/scripts/cli.js pdf resume.md
+node assets/oh-my-resume/scripts/cli.js html resume.md
+node assets/oh-my-resume/scripts/cli.js html-pdf resume.md
+node assets/oh-my-resume/scripts/cli.js export resume.md
 ```
 
 ### 🔧 Debug 预览
@@ -147,9 +150,13 @@ Use $oh-my-resume to debug resume.md.
 页面包含：
 
 -  左侧 Markdown 编辑器；
--  右侧 PDF 预览；
--  `渲染 PDF` 按钮，保存 Markdown 并重新生成 PDF；
+-  右侧 PDF / HTML 预览；
+-  `渲染引擎` 选择，支持 LaTeX PDF 和 HTML 快速预览；
+-  `渲染` 按钮，保存 Markdown 并重新生成当前引擎产物；
+-  `HTML 导出 PDF` 按钮，用浏览器打印引擎生成无 TeX 兜底 PDF；
+-  `导出源码` 按钮，导出 Markdown、配置、LaTeX、HTML 和模板源码包；
 -  `样式设置` 按钮，调整字体、间距、颜色、边距、照片尺寸；
+-  `样式设置 -> 模板` 自动读取当前目录 `omr.styles/*.json`，也可以通过文件夹选择器导入 JSON 配置；
 -  自由输入数值，因此 `10.85pt`、`0.41em` 这类小数值也可以使用。
 
 ```bash
@@ -164,6 +171,9 @@ debug 服务会一直运行，直到你手动停止进程。
 - 📄 Markdown 简历格式
 - ⚙️ CLI 工具链
 - 📦 PDF 一键生成
+- 🌐 HTML 快速预览
+- 🖨️ HTML PDF 兜底导出
+- 📤 源码包导出
 - 🧱 LaTeX 构建链
 - 🧪 Debug 可视化编辑器
 - 🇨🇳 中文优化排版
@@ -216,7 +226,7 @@ Oh My Resume 会优先读取当前工作目录的本地配置：
 
 因此 Skill 更新不会覆盖你的当前简历样式。只要 `omr.config.json` 留在简历目录下，它就会优先覆盖内置推荐值。
 
-### 样式预设
+### 本地样式模板
 
 可以把常用样式保存到当前目录的 `omr.styles/`：
 
@@ -227,13 +237,13 @@ omr.styles/
   interview.json
 ```
 
-Debug 页面的「样式设置 -> 模板」会自动读取 `omr.styles/*.json`。你也可以在「本地配置」里填写任意相对路径，例如：
+Debug 页面的「样式设置 -> 模板」只读取当前目录的本地模板。如果没有 `omr.styles/*.json`，下拉框会显示为空状态。你也可以在「配置路径」里填写任意相对路径，例如：
 
 ```text
 omr.styles/current-comfort.json
 ```
 
-应用模板只会合并 `theme` 和 `markdown` 配置，不会修改 Markdown 正文、输入路径或输出路径。
+也可以点击「打开文件夹」选择包含 JSON 配置的文件夹，页面会读取其中的配置并应用。应用模板只会合并 `theme` 和 `markdown` 配置，不会修改 Markdown 正文、输入路径或输出路径。
 
 ---
 
@@ -244,6 +254,12 @@ Skill 会自动检查：
 -  Node.js 18+
 -  XeLaTeX
 -  latexmk
+
+HTML 快速预览不依赖 TeX。`html-pdf` / 「HTML 导出 PDF」需要本机安装 Google Chrome、Microsoft Edge 或 Chromium；自动检测失败时可设置：
+
+```bash
+export OMR_HTML_PDF_BROWSER="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+```
 
 ###   macOS
 

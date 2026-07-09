@@ -6,6 +6,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const cli = require("./cli");
+const { buildHtmlResume } = require("./build");
 
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -135,10 +136,72 @@ async function testWindowsInstallScriptsAreWired() {
   assert.match(ps, /scripts\\cli\.js\s+doctor/i);
   assert.match(ps, /VerifyPdf/);
 }
+
+async function testLocalPresetsOnlyListCurrentDirectoryJson() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-preset-test-"));
+  fs.mkdirSync(path.join(tempDir, "omr.styles"));
+  fs.writeFileSync(path.join(tempDir, "omr.styles", "comfort.json"), JSON.stringify({ theme: { sizes: { omrBodyFontSize: "11pt" } } }));
+  fs.writeFileSync(path.join(tempDir, "omr.styles", "notes.txt"), "ignore");
+  const presets = cli.listStylePresets(tempDir);
+  assert.deepStrictEqual(presets, [{
+    id: "local:comfort.json",
+    label: "comfort",
+    path: path.join("omr.styles", "comfort.json")
+  }]);
+}
+
+async function testHtmlRendererBuildsStandalonePreview() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-html-test-"));
+  fs.writeFileSync(path.join(tempDir, "avatar.jpg"), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+  fs.writeFileSync(path.join(tempDir, "resume.md"), [
+    "---",
+    "name: Test User",
+    "avatar: avatar.jpg",
+    "contacts:",
+    "  - 邮箱：[test@example.com](mailto:test@example.com)",
+    "---",
+    "",
+    "## Experience",
+    "",
+    "### Project`AI` <time>2026</time>",
+    "",
+    "- Built **fast** preview."
+  ].join("\n"));
+  fs.writeFileSync(path.join(tempDir, "omr.config.json"), JSON.stringify({
+    theme: {
+      sizes: { omrBodyFontSize: "11pt" },
+      options: { sectionStyle: "minimal" }
+    }
+  }));
+  const result = buildHtmlResume({
+    cwd: tempDir,
+    input: "resume.md",
+    output: "build/resume.html",
+    config: "omr.config.json"
+  });
+  const html = fs.readFileSync(result.output, "utf8");
+  assert.match(html, /Test User/);
+  assert.match(html, /<span class="tag">AI<\/span>/);
+  assert.match(html, /<strong>fast<\/strong>/);
+  assert.match(html, /sectionTitle section-minimal/);
+  assert.match(html, /data:image\/jpeg;base64/);
+  assert.match(html, /@media print/);
+}
+
+async function testHtmlPdfBrowserCanUseExplicitPath() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-browser-test-"));
+  const browser = path.join(tempDir, process.platform === "win32" ? "chrome.cmd" : "chrome");
+  fs.writeFileSync(browser, process.platform === "win32" ? "@echo off\r\nexit /b 0\r\n" : "#!/bin/sh\nexit 0\n");
+  if (process.platform !== "win32") fs.chmodSync(browser, 0o755);
+  assert.strictEqual(cli.findHtmlPdfBrowser({ OMR_HTML_PDF_BROWSER: browser }), browser);
+}
 async function main() {
   await testWithTexPathUsesExplicitExtraPath();
   await testDebugServerSurvivesLongRender();
   await testWindowsInstallScriptsAreWired();
+  await testLocalPresetsOnlyListCurrentDirectoryJson();
+  await testHtmlRendererBuildsStandalonePreview();
+  await testHtmlPdfBrowserCanUseExplicitPath();
 }
 
 main().catch((error) => {

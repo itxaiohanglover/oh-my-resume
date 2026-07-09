@@ -8,6 +8,8 @@ Agents should call:
 node assets/oh-my-resume/scripts/cli.js doctor
 node assets/oh-my-resume/scripts/cli.js init .
 node assets/oh-my-resume/scripts/cli.js pdf resume.md
+node assets/oh-my-resume/scripts/cli.js html resume.md
+node assets/oh-my-resume/scripts/cli.js html-pdf resume.md
 node assets/oh-my-resume/scripts/cli.js debug resume.md
 ```
 

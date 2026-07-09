@@ -5,8 +5,8 @@ const http = require("http");
 const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
-const { URL } = require("url");
-const { buildResume } = require("./build");
+const { pathToFileURL, URL } = require("url");
+const { buildHtmlResume, buildResume } = require("./build");
 
 const packageRoot = path.resolve(__dirname, "..");
 const builtInStylePresets = {
@@ -125,14 +125,20 @@ function usage() {
 Usage:
   oh-my-resume init [dir]
   oh-my-resume build [input.md] [--out build/resume.tex] [--config omr.config.json] [--theme classic]
+  oh-my-resume html [input.md] [--out build/resume.html] [--config omr.config.json]
+  oh-my-resume html-pdf [input.md] [--pdf resume-html.pdf] [--config omr.config.json]
   oh-my-resume pdf [input.md] [--out build/resume.tex] [--pdf resume.pdf] [--config omr.config.json]
+  oh-my-resume export [input.md] [--out omr-export/resume-source] [--config omr.config.json]
   oh-my-resume debug [input.md] [--pdf resume.pdf] [--config omr.config.json] [--port 0] [--no-open]
   oh-my-resume watch [input.md] [--pdf resume.pdf] [--config omr.config.json]  # advanced
   oh-my-resume doctor
 
 Examples:
   oh-my-resume init .
+  oh-my-resume html resume.md
+  oh-my-resume html-pdf resume.md
   oh-my-resume pdf resume.md
+  oh-my-resume export resume.md
   oh-my-resume debug resume.md
 `);
 }
@@ -275,15 +281,11 @@ function listLocalStylePresets(cwd) {
 }
 
 function listStylePresets(cwd) {
-  const builtIns = Object.entries(builtInStylePresets).map(([id, preset]) => ({
-    id,
-    label: preset.label,
-    builtin: true
-  }));
-  return [...builtIns, ...listLocalStylePresets(cwd)];
+  return listLocalStylePresets(cwd);
 }
 
-function readStylePreset(cwd, presetId, presetPath) {
+function readStylePreset(cwd, presetId, presetPath, presetConfig) {
+  if (presetConfig && typeof presetConfig === "object") return presetConfig;
   if (presetPath) {
     const file = path.resolve(cwd, presetPath);
     if (!fs.existsSync(file)) throw new Error(`Style config not found: ${presetPath}`);
@@ -295,9 +297,7 @@ function readStylePreset(cwd, presetId, presetPath) {
     if (!fs.existsSync(file)) throw new Error(`Style preset not found: ${fileName}`);
     return JSON.parse(fs.readFileSync(file, "utf8"));
   }
-  const preset = builtInStylePresets[presetId];
-  if (!preset) throw new Error(`Unknown style preset: ${presetId || ""}`);
-  return preset.config;
+  throw new Error("请选择本地配置，或通过文件夹选择器导入配置。");
 }
 
 function mergeStylePreset(current, presetConfig) {
@@ -322,6 +322,15 @@ function defaultPdfOutput(input) {
   return `${path.basename(input, path.extname(input))}.pdf`;
 }
 
+function defaultHtmlOutput(input) {
+  const name = path.basename(input, path.extname(input));
+  return path.join("build", `${name}.html`);
+}
+
+function defaultHtmlPdfOutput(input) {
+  return `${path.basename(input, path.extname(input))}-html.pdf`;
+}
+
 function buildCommand(args) {
   const cwd = process.cwd();
   const config = loadConfig(cwd, args.config);
@@ -339,6 +348,59 @@ function buildCommand(args) {
     console.log(`Generated ${path.relative(cwd, result.output)} from ${path.relative(cwd, result.input)}`);
   }
   return result;
+}
+
+function htmlCommand(args) {
+  const cwd = process.cwd();
+  const config = loadConfig(cwd, args.config);
+  const input = resolveMarkdownInput(cwd, config, args._[0]);
+  const output = args.out || config.html || defaultHtmlOutput(input);
+  const result = buildHtmlResume({
+    cwd,
+    input,
+    output,
+    config: args.config || (fs.existsSync(path.resolve(cwd, "omr.config.json")) ? "omr.config.json" : undefined)
+  });
+  if (!args.silent) {
+    console.log(`Generated ${path.relative(cwd, result.output)} from ${path.relative(cwd, result.input)}`);
+  }
+  return result;
+}
+
+function htmlPdfCommand(args) {
+  const cwd = process.cwd();
+  const config = loadConfig(cwd, args.config);
+  const input = resolveMarkdownInput(cwd, config, args._[0]);
+  const htmlOutput = args.out || config.html || defaultHtmlOutput(input);
+  const html = htmlCommand({ ...args, _: [input], out: htmlOutput, silent: true });
+  const pdf = path.resolve(cwd, args.pdf || config.htmlPdf || defaultHtmlPdfOutput(input));
+  fs.mkdirSync(path.dirname(pdf), { recursive: true });
+
+  const browser = findHtmlPdfBrowser(process.env);
+  if (!browser) {
+    throw new Error("No headless browser found for HTML PDF export. Install Google Chrome, Microsoft Edge, or Chromium, then retry. You can still open the HTML preview and print it to PDF from the browser.");
+  }
+
+  const result = spawnCommandSync(browser, [
+    "--headless=new",
+    "--disable-gpu",
+    "--no-sandbox",
+    "--print-to-pdf-no-header",
+    `--print-to-pdf=${pdf}`,
+    pathToFileURL(html.output).href
+  ], {
+    cwd,
+    encoding: "utf8"
+  });
+
+  if (result.status !== 0 || !fs.existsSync(pdf)) {
+    const detail = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+    throw new Error(detail || "HTML PDF export failed.");
+  }
+  if (!args.silent) {
+    console.log(`Generated ${path.relative(cwd, pdf)} from ${path.relative(cwd, html.output)}`);
+  }
+  return { input: html.input, html: html.output, pdf };
 }
 
 function pdfCommand(args) {
@@ -391,6 +453,62 @@ function pdfCommand(args) {
   return { input: result.input, tex: result.output, pdf };
 }
 
+function copyDirSync(from, to) {
+  fs.mkdirSync(to, { recursive: true });
+  for (const item of fs.readdirSync(from, { withFileTypes: true })) {
+    const source = path.join(from, item.name);
+    const target = path.join(to, item.name);
+    if (item.isDirectory()) copyDirSync(source, target);
+    else if (item.isFile()) fs.copyFileSync(source, target);
+  }
+}
+
+function exportSourcePackage(args) {
+  const cwd = process.cwd();
+  const config = loadConfig(cwd, args.config);
+  const input = resolveMarkdownInput(cwd, config, args._[0]);
+  const inputPath = path.resolve(cwd, input);
+  const base = path.basename(input, path.extname(input));
+  const exportRoot = path.resolve(cwd, args.out || path.join("omr-export", `${base}-source`));
+  const runtimeRoot = path.join(exportRoot, "oh-my-resume");
+  const latexDir = path.join(exportRoot, "latex");
+  const htmlDir = path.join(exportRoot, "html");
+  const configFile = path.resolve(cwd, args.config || "omr.config.json");
+
+  fs.rmSync(exportRoot, { recursive: true, force: true });
+  fs.mkdirSync(latexDir, { recursive: true });
+  fs.mkdirSync(htmlDir, { recursive: true });
+  copyDirSync(path.join(packageRoot, "src"), path.join(runtimeRoot, "src"));
+  fs.copyFileSync(inputPath, path.join(exportRoot, path.basename(inputPath)));
+  if (fs.existsSync(configFile)) fs.copyFileSync(configFile, path.join(exportRoot, "omr.config.json"));
+
+  const tex = buildResume({
+    cwd,
+    input,
+    output: path.join(latexDir, `${base}.tex`),
+    config: fs.existsSync(configFile) ? path.relative(cwd, configFile) : undefined,
+    theme: args.theme,
+    packageRoot: runtimeRoot
+  });
+  const html = buildHtmlResume({
+    cwd,
+    input,
+    output: path.join(htmlDir, `${base}.html`),
+    config: fs.existsSync(configFile) ? path.relative(cwd, configFile) : undefined
+  });
+  fs.writeFileSync(path.join(exportRoot, "README.md"), [
+    "# Oh My Resume Source Package",
+    "",
+    `- Markdown: ${path.basename(inputPath)}`,
+    "- Config: omr.config.json",
+    `- LaTeX: latex/${path.basename(tex.output)}`,
+    `- HTML: html/${path.basename(html.output)}`,
+    "",
+    "Run LaTeX from the project root with xelatex/latexmk installed."
+  ].join("\n"), "utf8");
+  return { exportRoot, tex: tex.output, html: html.output };
+}
+
 function debugCommand(args) {
   const cwd = process.cwd();
   const config = loadConfig(cwd, args.config);
@@ -398,6 +516,8 @@ function debugCommand(args) {
   const input = resolveMarkdownInput(cwd, config, args._[0]);
   const inputPath = path.resolve(cwd, input);
   const pdfPath = path.resolve(cwd, args.pdf || config.pdf || defaultPdfOutput(input));
+  const htmlPath = path.resolve(cwd, config.html || defaultHtmlOutput(input));
+  const htmlPdfPath = path.resolve(cwd, config.htmlPdf || defaultHtmlPdfOutput(input));
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`Markdown file not found: ${input}`);
@@ -424,7 +544,10 @@ function debugCommand(args) {
         markdown: fs.readFileSync(inputPath, "utf8"),
         config: normalizeDebugConfig(loadConfig(cwd, args.config)),
         configPath: path.relative(cwd, configPath),
-        pdfUrl: fs.existsSync(pdfPath) ? `/pdf?ts=${Date.now()}` : null
+        pdfUrl: fs.existsSync(pdfPath) ? `/pdf?ts=${Date.now()}` : null,
+        htmlUrl: fs.existsSync(htmlPath) ? `/html?ts=${Date.now()}` : null,
+        htmlPdf: path.relative(cwd, htmlPdfPath),
+        engine: config.engine || "latex"
       });
       return;
     }
@@ -441,7 +564,7 @@ function debugCommand(args) {
       readJsonBody(req)
         .then((body) => {
           const current = loadConfig(cwd, args.config);
-          const preset = readStylePreset(cwd, String(body.preset || ""), String(body.path || "").trim());
+          const preset = readStylePreset(cwd, String(body.preset || ""), String(body.path || "").trim(), body.config);
           const next = mergeStylePreset(current, preset);
           fs.writeFileSync(configPath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
           sendJson(res, 200, {
@@ -492,6 +615,17 @@ function debugCommand(args) {
             throw new Error("Render request must include a markdown string.");
           }
           fs.writeFileSync(inputPath, body.markdown, "utf8");
+          const engine = String(body.engine || "latex");
+          if (engine === "html") {
+            const result = htmlCommand({ ...args, _: [input], out: path.relative(cwd, htmlPath), silent: true });
+            sendJson(res, 200, {
+              ok: true,
+              input: path.relative(cwd, result.input),
+              html: path.relative(cwd, result.output),
+              htmlUrl: `/html?ts=${Date.now()}`
+            });
+            return;
+          }
           const result = pdfCommand({ ...args, _: [input], silent: true });
           sendJson(res, 200, {
             ok: true,
@@ -506,9 +640,53 @@ function debugCommand(args) {
             ok: false,
             error: trimError(error.message || String(error))
           });
+      });
+      return;
+    }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/export-source") {
+      readJsonBody(req)
+        .then((body) => {
+          if (typeof body.markdown === "string") fs.writeFileSync(inputPath, body.markdown, "utf8");
+          const result = exportSourcePackage({ ...args, _: [input] });
+          sendJson(res, 200, {
+            ok: true,
+            path: path.relative(cwd, result.exportRoot),
+            tex: path.relative(cwd, result.tex),
+            html: path.relative(cwd, result.html)
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 500, {
+            ok: false,
+            error: trimError(error.message || String(error))
+          });
         });
       return;
     }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/html-pdf") {
+      readJsonBody(req)
+        .then((body) => {
+          if (typeof body.markdown === "string") fs.writeFileSync(inputPath, body.markdown, "utf8");
+          const result = htmlPdfCommand({ ...args, _: [input], pdf: path.relative(cwd, htmlPdfPath), silent: true });
+          sendJson(res, 200, {
+            ok: true,
+            input: path.relative(cwd, result.input),
+            html: path.relative(cwd, result.html),
+            pdf: path.relative(cwd, result.pdf),
+            pdfUrl: `/html-pdf?ts=${Date.now()}`
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 500, {
+            ok: false,
+            error: trimError(error.message || String(error))
+          });
+        });
+      return;
+    }
+
     if (req.method === "GET" && requestUrl.pathname === "/pdf") {
       if (!fs.existsSync(pdfPath)) {
         send(res, 404, "PDF has not been generated yet.");
@@ -519,6 +697,32 @@ function debugCommand(args) {
         "Cache-Control": "no-store"
       });
       fs.createReadStream(pdfPath).pipe(res);
+      return;
+    }
+
+    if (req.method === "GET" && requestUrl.pathname === "/html") {
+      if (!fs.existsSync(htmlPath)) {
+        send(res, 404, "HTML has not been generated yet.");
+        return;
+      }
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      fs.createReadStream(htmlPath).pipe(res);
+      return;
+    }
+
+    if (req.method === "GET" && requestUrl.pathname === "/html-pdf") {
+      if (!fs.existsSync(htmlPdfPath)) {
+        send(res, 404, "HTML PDF has not been generated yet.");
+        return;
+      }
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Cache-Control": "no-store"
+      });
+      fs.createReadStream(htmlPdfPath).pipe(res);
       return;
     }
 
@@ -1012,8 +1216,11 @@ function debugHtml(fileName) {
     <header class="toolbar">
       <div class="title">Oh My Resume · ${escapeHtml(fileName)}</div>
       <div class="actions">
+        <span class="menuItem"><span class="menuIcon">渲染引擎</span><select id="engineSelect"><option value="latex">LaTeX PDF</option><option value="html">HTML 快速预览</option></select></span>
         <button class="ghost" id="style">样式设置</button>
-        <button id="render">渲染 PDF</button>
+        <button class="ghost" id="exportSource">导出源码</button>
+        <button class="ghost" id="exportHtmlPdf">HTML 导出 PDF</button>
+        <button id="render">渲染</button>
       </div>
     </header>
     <main class="workspace">
@@ -1046,8 +1253,10 @@ function debugHtml(fileName) {
         <section class="settingsSection">
           <p class="settingsTitle">模板</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">样式预设</span><select id="presetSelect"></select></span>
-            <span class="menuItem"><span class="menuIcon">本地配置</span><input id="presetPath" placeholder="omr.styles/my-style.json"></span>
+            <span class="menuItem"><span class="menuIcon">本地配置</span><select id="presetSelect"></select></span>
+            <span class="menuItem"><span class="menuIcon">配置路径</span><input id="presetPath" placeholder="omr.styles/my-style.json"></span>
+            <input id="presetFolder" type="file" webkitdirectory directory multiple accept=".json,application/json" hidden>
+            <button class="ghost" id="pickPresetFolder" type="button">打开文件夹</button>
             <button class="ghost" id="applyPreset" type="button">应用模板</button>
           </div>
         </section>
@@ -1096,6 +1305,9 @@ function debugHtml(fileName) {
   <script>
     const editor = document.getElementById("editor");
     const renderButton = document.getElementById("render");
+    const engineSelect = document.getElementById("engineSelect");
+    const exportSource = document.getElementById("exportSource");
+    const exportHtmlPdf = document.getElementById("exportHtmlPdf");
     const styleButton = document.getElementById("style");
     const preview = document.getElementById("preview");
     const message = document.getElementById("message");
@@ -1110,6 +1322,8 @@ function debugHtml(fileName) {
     const styleGrid = document.getElementById("styleGrid");
     const presetSelect = document.getElementById("presetSelect");
     const presetPath = document.getElementById("presetPath");
+    const presetFolder = document.getElementById("presetFolder");
+    const pickPresetFolder = document.getElementById("pickPresetFolder");
     const applyPreset = document.getElementById("applyPreset");
     const quickFont = document.getElementById("quickFont");
     const quickSize = document.getElementById("quickSize");
@@ -1124,6 +1338,7 @@ function debugHtml(fileName) {
     const applyCustomColor = document.getElementById("applyCustomColor");
     let currentConfig = null;
     let currentConfigPath = "omr.config.json";
+    let uploadedPresetConfig = null;
 
     const alignOptions = [
       ["left", "靠左"],
@@ -1194,14 +1409,21 @@ function debugHtml(fileName) {
       renderQuickControls();
       await renderPresetControls();
       paths.textContent = state.input + " -> " + state.pdf;
-      if (state.pdfUrl) showPdf(state.pdfUrl);
+      engineSelect.value = state.engine === "html" ? "html" : "latex";
+      syncEngineActions();
+      if (engineSelect.value === "html" && state.htmlUrl) showPreview(state.htmlUrl, "HTML 预览");
+      else if (state.pdfUrl) showPreview(state.pdfUrl, "PDF 预览");
     }
 
-    function showPdf(url) {
+    function syncEngineActions() {
+      exportHtmlPdf.hidden = engineSelect.value !== "html";
+    }
+
+    function showPreview(url, title) {
       preview.innerHTML = "";
       const frame = document.createElement("iframe");
       frame.src = url;
-      frame.title = "PDF 预览";
+      frame.title = title;
       preview.appendChild(frame);
     }
 
@@ -1210,14 +1432,17 @@ function debugHtml(fileName) {
       message.className = "";
       message.textContent = "正在渲染...";
       try {
+        const engine = engineSelect.value || "latex";
         const response = await fetch("/api/render", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ markdown: editor.value })
+          body: JSON.stringify({ markdown: editor.value, engine })
         });
         const data = await response.json();
         if (!data.ok) throw new Error(data.error || "渲染失败。");
-        showPdf(data.pdfUrl);
+        syncEngineActions();
+        if (engine === "html") showPreview(data.htmlUrl, "HTML 预览");
+        else showPreview(data.pdfUrl, "PDF 预览");
         message.textContent = "已渲染 " + new Date().toLocaleTimeString();
       } catch (error) {
         message.className = "error";
@@ -1290,14 +1515,15 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       presetSelect.innerHTML = "";
       const current = document.createElement("option");
       current.value = "";
-      current.textContent = "保持当前配置";
+      current.textContent = "未检测到本地配置";
       presetSelect.appendChild(current);
       for (const preset of data.presets || []) {
         const option = document.createElement("option");
         option.value = preset.id;
-        option.textContent = preset.builtin ? preset.label : "本地：" + preset.label;
+        option.textContent = preset.label;
         presetSelect.appendChild(option);
       }
+      if ((data.presets || []).length) current.textContent = "选择本地配置";
       presetPath.placeholder = data.configPath || currentConfigPath;
     }
 
@@ -1378,12 +1604,14 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             preset: presetSelect.value,
-            path: presetPath.value
+            path: presetPath.value,
+            config: uploadedPresetConfig
           })
         });
         const data = await response.json();
         if (!data.ok) throw new Error(data.error || "模板应用失败。");
         currentConfig = data.config;
+        uploadedPresetConfig = null;
         renderStyleFields();
         renderQuickControls();
         message.textContent = "已应用模板 " + data.path;
@@ -1397,10 +1625,77 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       }
     }
 
+    async function exportSources() {
+      exportSource.disabled = true;
+      message.className = "";
+      message.textContent = "正在导出源码...";
+      try {
+        const response = await fetch("/api/export-source", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ markdown: editor.value })
+        });
+        const data = await response.json();
+        if (!data.ok) throw new Error(data.error || "源码导出失败。");
+        message.textContent = "已导出源码包 " + data.path;
+      } catch (error) {
+        message.className = "error";
+        message.textContent = "源码导出失败";
+        errorText.textContent = error.message || String(error);
+        errorDialog.showModal();
+      } finally {
+        exportSource.disabled = false;
+      }
+    }
+
+    async function exportHtmlPdfFile() {
+      exportHtmlPdf.disabled = true;
+      message.className = "";
+      message.textContent = "正在导出 HTML PDF...";
+      try {
+        const response = await fetch("/api/html-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ markdown: editor.value })
+        });
+        const data = await response.json();
+        if (!data.ok) throw new Error(data.error || "HTML PDF 导出失败。");
+        showPreview(data.pdfUrl, "HTML PDF 预览");
+        message.textContent = "已导出 HTML PDF " + data.pdf;
+      } catch (error) {
+        message.className = "error";
+        message.textContent = "HTML PDF 导出失败";
+        errorText.textContent = error.message || String(error);
+        errorDialog.showModal();
+      } finally {
+        exportHtmlPdf.disabled = false;
+      }
+    }
+
     closeError.addEventListener("click", () => errorDialog.close());
     closeStyle.addEventListener("click", () => styleDialog.close());
     styleButton.addEventListener("click", () => styleDialog.showModal());
     applyPreset.addEventListener("click", applyStylePreset);
+    pickPresetFolder.addEventListener("click", () => presetFolder.click());
+    presetFolder.addEventListener("change", async () => {
+      const files = Array.from(presetFolder.files || []).filter((file) => file.name.toLowerCase().endsWith(".json"));
+      if (!files.length) {
+        message.className = "error";
+        message.textContent = "文件夹中没有 JSON 配置";
+        return;
+      }
+      const file = files[0];
+      try {
+        uploadedPresetConfig = JSON.parse(await file.text());
+        presetPath.value = file.webkitRelativePath || file.name;
+        message.className = "";
+        message.textContent = "已读取配置 " + (file.webkitRelativePath || file.name);
+      } catch (error) {
+        uploadedPresetConfig = null;
+        message.className = "error";
+        message.textContent = "配置 JSON 无法解析";
+      }
+    });
     quickHeaderAlign.addEventListener("change", applyQuickConfig);
     quickSectionStyle.addEventListener("change", applyQuickConfig);
     quickFont.addEventListener("change", applyQuickConfig);
@@ -1430,7 +1725,10 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       message.textContent = "已应用自定义颜色";
     });
     resetStyle.addEventListener("click", loadState);
+    engineSelect.addEventListener("change", syncEngineActions);
     renderButton.addEventListener("click", render);
+    exportSource.addEventListener("click", exportSources);
+    exportHtmlPdf.addEventListener("click", exportHtmlPdfFile);
     setInterval(() => fetch("/api/ping", { method: "POST" }).catch(() => {}), 2000);
     window.addEventListener("beforeunload", () => {
       navigator.sendBeacon("/api/ping");
@@ -1556,6 +1854,44 @@ function existingCommonWindowsTexPaths(env = process.env) {
   return candidates.filter((item) => item && fs.existsSync(item));
 }
 
+function findHtmlPdfBrowser(env = process.env) {
+  const explicit = env.OMR_HTML_PDF_BROWSER || env.CHROME_PATH || env.PUPPETEER_EXECUTABLE_PATH;
+  if (explicit && fs.existsSync(explicit)) return explicit;
+
+  if (process.platform === "darwin") {
+    const appBins = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium"
+    ];
+    const foundApp = appBins.find((item) => fs.existsSync(item));
+    if (foundApp) return foundApp;
+  }
+
+  if (process.platform === "win32") {
+    const localAppData = env.LOCALAPPDATA || "";
+    const programFiles = env.ProgramFiles || "C:\\Program Files";
+    const programFilesX86 = env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+    const candidates = [
+      localAppData ? path.join(localAppData, "Google", "Chrome", "Application", "chrome.exe") : "",
+      path.join(programFiles, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(programFilesX86, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(programFiles, "Microsoft", "Edge", "Application", "msedge.exe"),
+      path.join(programFilesX86, "Microsoft", "Edge", "Application", "msedge.exe")
+    ];
+    const found = candidates.find((item) => item && fs.existsSync(item));
+    if (found) return found;
+  }
+
+  return findCommand("google-chrome", env)
+    || findCommand("google-chrome-stable", env)
+    || findCommand("microsoft-edge", env)
+    || findCommand("msedge", env)
+    || findCommand("chromium", env)
+    || findCommand("chromium-browser", env)
+    || findCommand("chrome", env);
+}
+
 function withTexPath(env, texInputs = []) {
   const current = env.PATH || "";
   const explicitTexPath = splitPathList(env.OMR_TEX_PATH || env.OH_MY_RESUME_TEX_PATH);
@@ -1640,7 +1976,10 @@ function main() {
 
   if (command === "init") return initProject(args._[0]);
   if (command === "build") return buildCommand(args);
+  if (command === "html") return htmlCommand(args);
+  if (command === "html-pdf") return htmlPdfCommand(args);
   if (command === "pdf") return pdfCommand(args);
+  if (command === "export") return exportSourcePackage(args);
   if (command === "debug") return debugCommand(args);
   if (command === "watch") return watchCommand(args);
   if (command === "doctor") return doctorCommand();
@@ -1662,6 +2001,8 @@ if (require.main === module) {
 module.exports = {
   withTexPath,
   findCommand,
+  findHtmlPdfBrowser,
   commandExists,
-  spawnCommandSync
+  spawnCommandSync,
+  listStylePresets
 };

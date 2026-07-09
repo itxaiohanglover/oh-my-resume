@@ -257,6 +257,67 @@ function inline(text) {
   return result;
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function inlineHtml(text) {
+  let result = "";
+  let i = 0;
+  const value = String(text);
+
+  while (i < value.length) {
+    if (value.startsWith("**", i)) {
+      const end = value.indexOf("**", i + 2);
+      if (end !== -1) {
+        result += `<strong>${inlineHtml(value.slice(i + 2, end))}</strong>`;
+        i = end + 2;
+        continue;
+      }
+    }
+
+    if (value[i] === "`") {
+      const end = value.indexOf("`", i + 1);
+      if (end !== -1) {
+        result += `<span class="tag">${inlineHtml(value.slice(i + 1, end))}</span>`;
+        i = end + 1;
+        continue;
+      }
+    }
+
+    if (value.startsWith("<center>", i)) {
+      const end = value.indexOf("</center>", i + 8);
+      if (end !== -1) {
+        result += `<span class="center">${inlineHtml(value.slice(i + 8, end))}</span>`;
+        i = end + 9;
+        continue;
+      }
+    }
+
+    if (value[i] === "[") {
+      const textEnd = value.indexOf("]", i + 1);
+      const urlStart = textEnd !== -1 ? value.indexOf("(", textEnd) : -1;
+      const urlEnd = urlStart !== -1 ? value.indexOf(")", urlStart) : -1;
+      if (textEnd !== -1 && urlStart === textEnd + 1 && urlEnd !== -1) {
+        const label = inlineHtml(value.slice(i + 1, textEnd));
+        const url = value.slice(urlStart + 1, urlEnd).replace(/"/g, "%22");
+        result += `<a href="${escapeHtml(url)}">${label}</a>`;
+        i = urlEnd + 1;
+        continue;
+      }
+    }
+
+    result += escapeHtml(value[i]);
+    i += 1;
+  }
+
+  return result;
+}
+
 function renderContactLines(meta) {
   const lines = Array.isArray(meta.contacts) ? meta.contacts : [];
   const derived = [];
@@ -400,6 +461,216 @@ ${renderSections(sections)}
 `;
 }
 
+function cssValue(config, group, name, fallback) {
+  return (((config.theme || {})[group] || {})[name]) || fallback;
+}
+
+function rgbCss(value) {
+  return `rgb(${String(value || "37,99,235").replace(/\s/g, "")})`;
+}
+
+function fileDataUri(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return "";
+  const ext = path.extname(filePath).toLowerCase();
+  const mime = ext === ".png" ? "image/png"
+    : ext === ".webp" ? "image/webp"
+      : ext === ".gif" ? "image/gif"
+        : ext === ".svg" ? "image/svg+xml"
+          : "image/jpeg";
+  return `data:${mime};base64,${fs.readFileSync(filePath).toString("base64")}`;
+}
+
+function htmlStyleTokens(config = {}) {
+  const accent = cssValue(config, "colors", "omrTagText", "37,99,235");
+  const tagBg = cssValue(config, "colors", "omrTagBg", "232,241,255");
+  const sectionBg = cssValue(config, "colors", "omrSectionBg", accent);
+  return {
+    colors: {
+      accent: rgbCss(accent),
+      tagBg: rgbCss(tagBg),
+      sectionBg: rgbCss(sectionBg),
+      classicBg: rgbCss(cssValue(config, "colors", "omrClassicBg", "242,242,242")),
+      muted: "#4b5563",
+      text: "#111827"
+    },
+    lengths: {
+      pageLeft: cssValue(config, "lengths", "omrPageMarginLeft", "8mm"),
+      pageRight: cssValue(config, "lengths", "omrPageMarginRight", "8mm"),
+      pageTop: cssValue(config, "lengths", "omrPageMarginTop", "8mm"),
+      pageBottom: cssValue(config, "lengths", "omrPageMarginBottom", "8mm"),
+      photoWidth: cssValue(config, "lengths", "omrPhotoWidth", "2.35cm"),
+      photoHeight: cssValue(config, "lengths", "omrPhotoHeight", "2.75cm"),
+      logoHeight: cssValue(config, "lengths", "omrLogoHeight", "1.2cm"),
+      headerGap: cssValue(config, "lengths", "omrHeaderGap", "7mm"),
+      photoRightInset: cssValue(config, "lengths", "omrPhotoRightInset", "0mm"),
+      headerNameGap: cssValue(config, "lengths", "omrHeaderNameGap", "0.41em"),
+      headerLineGap: cssValue(config, "lengths", "omrHeaderLineGap", "0.1em"),
+      titleBodyGap: cssValue(config, "lengths", "omrTitleBodyGap", "0.38em"),
+      hOneBefore: cssValue(config, "lengths", "omrHeadingOneBefore", "0.42em"),
+      hOneAfter: cssValue(config, "lengths", "omrHeadingOneAfter", "0.22em"),
+      sectionBefore: cssValue(config, "lengths", "omrSectionBefore", "0.58em"),
+      sectionAfter: cssValue(config, "lengths", "omrSectionAfter", "0.54em"),
+      entryBefore: cssValue(config, "lengths", "omrEntryBefore", "0.23em"),
+      entryAfter: cssValue(config, "lengths", "omrEntryAfter", "0.22em"),
+      entryDateWidth: cssValue(config, "lengths", "omrEntryDateWidth", "39mm"),
+      hFourBefore: cssValue(config, "lengths", "omrHeadingFourBefore", "0.35em"),
+      hFourAfter: cssValue(config, "lengths", "omrHeadingFourAfter", "0.18em")
+    },
+    sizes: {
+      body: cssValue(config, "sizes", "omrBodyFontSize", "11.2pt"),
+      bodyLine: cssValue(config, "sizes", "omrBodyLineHeight", "14.5pt"),
+      hOne: cssValue(config, "sizes", "omrHOneFontSize", "16.9pt"),
+      hOneLine: cssValue(config, "sizes", "omrHOneLineHeight", "19pt"),
+      section: cssValue(config, "sizes", "omrSectionFontSize", "12.1pt"),
+      sectionLine: cssValue(config, "sizes", "omrSectionLineHeight", "14.2pt"),
+      entry: cssValue(config, "sizes", "omrEntryFontSize", "10.5pt"),
+      entryLine: cssValue(config, "sizes", "omrEntryLineHeight", "13pt"),
+      hFour: cssValue(config, "sizes", "omrHFourFontSize", "10pt"),
+      hFourLine: cssValue(config, "sizes", "omrHFourLineHeight", "13pt")
+    },
+    fonts: {
+      body: cssValue(config, "fonts", "omrCJKMainFont", "Kaiti SC")
+    },
+    options: {
+      align: cssValue(config, "options", "omrHeaderAlign", "left"),
+      sectionStyle: cssValue(config, "options", "sectionStyle", "classic")
+    }
+  };
+}
+
+function renderContactLinesHtml(meta) {
+  const lines = Array.isArray(meta.contacts) ? meta.contacts : [];
+  const derived = [];
+  if (meta.phone) derived.push(`电话：${meta.phone}`);
+  if (meta.email) derived.push(`邮箱：[${meta.email}](mailto:${meta.email})`);
+  if (meta.city) derived.push(`城市：${meta.city}`);
+  const allLines = lines.length ? lines : [derived.join(" | ")].filter(Boolean);
+  return allLines.map((line) => `<div class="contact">${inlineHtml(line)}</div>`).join("\n");
+}
+
+function renderEntryHtml(entry) {
+  const tags = entry.tags.map((tag) => `<span class="tag">${inlineHtml(tag)}</span>`).join("");
+  const fields = entry.fields.map((field) => `<div class="field"><strong>${inlineHtml(field.label)}：</strong>${inlineHtml(field.value)}</div>`).join("\n");
+  const paragraphs = entry.paragraphs.map((paragraph) => `<p>${inlineHtml(paragraph)}</p>`).join("\n");
+  const bullets = entry.bullets.length
+    ? `<ul>\n${entry.bullets.map((bullet) => `  <li>${inlineHtml(bullet)}</li>`).join("\n")}\n</ul>`
+    : "";
+  const center = entry.center
+    ? `<div class="entryCenter">${inlineHtml(entry.center.text)} ${(entry.center.tags || []).map((tag) => `<span class="tag">${inlineHtml(tag)}</span>`).join("")}</div>`
+    : "";
+  return `<article class="entry">
+  <div class="entryHead">
+    <h3>${inlineHtml(entry.title)}${tags}</h3>
+    ${entry.date ? `<time>${inlineHtml(entry.date)}</time>` : ""}
+  </div>
+  ${center}
+  ${fields}
+  ${paragraphs}
+  ${bullets}
+</article>`;
+}
+
+function renderSectionsHtml(sections, tokens) {
+  return sections.map((section) => {
+    const body = section.blocks.map((block) => {
+      if (block.type === "entry") return renderEntryHtml(block);
+      if (block.type === "bullet") return `<ul><li>${inlineHtml(block.text)}</li></ul>`;
+      if (block.type === "heading" && block.level === 1) return `<h1>${inlineHtml(block.text)}</h1>`;
+      if (block.type === "heading" && block.level === 4) return `<h4>${inlineHtml(block.text)}</h4>`;
+      return `<p>${inlineHtml(block.text)}</p>`;
+    }).join("\n");
+    return `<section class="section">
+  <h2 class="sectionTitle section-${escapeHtml(tokens.options.sectionStyle)}"><span>${inlineHtml(section.title)}</span></h2>
+  ${body}
+</section>`;
+  }).join("\n");
+}
+
+function renderHtmlDocument(meta, sections, options = {}) {
+  const config = options.config || {};
+  const tokens = htmlStyleTokens(config);
+  const avatarValue = Array.isArray(meta.avatar) ? "" : meta.avatar;
+  const logoValue = meta.logo || "";
+  const baseDir = path.dirname(options.input || options.cwd || process.cwd());
+  const avatar = fileDataUri(avatarValue ? path.resolve(baseDir, avatarValue) : "");
+  const logo = fileDataUri(logoValue ? path.resolve(baseDir, logoValue) : "");
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(meta.name || "Resume")}</title>
+  <style>
+    @page { size: A4; margin: ${tokens.lengths.pageTop} ${tokens.lengths.pageRight} ${tokens.lengths.pageBottom} ${tokens.lengths.pageLeft}; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #c8ccd3; color: ${tokens.colors.text}; font: ${tokens.sizes.body}/${tokens.sizes.bodyLine} "${escapeHtml(tokens.fonts.body)}", "PingFang SC", "Microsoft YaHei", serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { position: relative; width: 210mm; min-height: 297mm; margin: 0 auto; padding: ${tokens.lengths.pageTop} ${tokens.lengths.pageRight} ${tokens.lengths.pageBottom} ${tokens.lengths.pageLeft}; background: white; }
+    .logo { position: absolute; left: calc(${tokens.lengths.pageLeft} - 2mm); top: calc(${tokens.lengths.pageTop} + 4mm); height: ${tokens.lengths.logoHeight}; max-width: 28mm; object-fit: contain; }
+    header { display: grid; grid-template-columns: minmax(0, 1fr) ${avatar ? `calc(${tokens.lengths.photoWidth} + ${tokens.lengths.photoRightInset})` : "0"}; align-items: center; column-gap: ${avatar ? tokens.lengths.headerGap : "0"}; min-height: ${avatar ? tokens.lengths.photoHeight : "0"}; margin-bottom: ${tokens.lengths.titleBodyGap}; }
+    .headerText { text-align: ${tokens.options.align === "center" ? "center" : "left"}; min-width: 0; }
+    .name { margin: 0 0 ${tokens.lengths.headerNameGap}; font-size: ${tokens.sizes.hOne}; line-height: ${tokens.sizes.hOneLine}; font-weight: 800; }
+    .contact { margin: ${tokens.lengths.headerLineGap} 0; color: ${tokens.colors.muted}; }
+    .avatarWrap { display: ${avatar ? "flex" : "none"}; justify-content: flex-end; align-items: center; padding-right: ${tokens.lengths.photoRightInset}; }
+    .avatar { width: ${tokens.lengths.photoWidth}; height: ${tokens.lengths.photoHeight}; object-fit: cover; }
+    a { color: ${tokens.colors.accent}; text-decoration: none; }
+    h1 { margin: ${tokens.lengths.hOneBefore} 0 ${tokens.lengths.hOneAfter}; font-size: ${tokens.sizes.hOne}; line-height: ${tokens.sizes.hOneLine}; font-weight: 800; }
+    .sectionTitle { position: relative; margin: ${tokens.lengths.sectionBefore} 0 ${tokens.lengths.sectionAfter}; font-size: ${tokens.sizes.section}; line-height: ${tokens.sizes.sectionLine}; font-weight: 800; color: ${tokens.colors.sectionBg}; }
+    .sectionTitle span { position: relative; z-index: 1; }
+    .section-classic { padding: 2.5pt 0 2.5pt 12pt; color: ${tokens.colors.text}; background: ${tokens.colors.classicBg}; border-left: 3pt solid ${tokens.colors.sectionBg}; }
+    .section-simple { padding: 0 0 2pt; border-bottom: 1.2pt solid ${tokens.colors.sectionBg}; }
+    .section-minimal { display: flex; align-items: center; gap: 0.5em; }
+    .section-minimal::after { content: ""; flex: 1; border-bottom: 1.2pt solid ${tokens.colors.sectionBg}; transform: translateY(0.08em); }
+    .section-premium span { display: inline-flex; min-width: 18%; justify-content: center; padding: 1pt 8pt; background: ${tokens.colors.sectionBg}; color: white; }
+    .section-premium::after { content: ""; position: absolute; left: 18%; right: 0; top: calc(50% + 1.5pt); height: 3pt; background: ${tokens.colors.sectionBg}; }
+    .section-refined span { display: inline-flex; min-width: 20%; padding: 1pt 16pt 1pt 12pt; color: white; background: ${tokens.colors.sectionBg}; clip-path: polygon(0 0, calc(100% - 16pt) 0, 100% 100%, 0% 100%); }
+    .section-refined::after { content: ""; position: absolute; left: 20%; right: 0; top: calc(50% + 2pt); height: 4pt; background: ${tokens.colors.sectionBg}; }
+    .section-professional span { display: inline-flex; min-width: 16%; padding: 1pt 14pt 1pt 8pt; color: white; background: ${tokens.colors.sectionBg}; border-radius: 3pt 0 0 3pt; clip-path: polygon(0 0, calc(100% - 10pt) 0, 100% 50%, calc(100% - 10pt) 100%, 0 100%); }
+    .section-professional::after { content: ""; position: absolute; left: 16%; right: 0; top: 50%; border-bottom: 1.2pt solid ${tokens.colors.sectionBg}; }
+    h3 { margin: 0; font-size: ${tokens.sizes.entry}; line-height: ${tokens.sizes.entryLine}; font-weight: 800; }
+    h4 { margin: ${tokens.lengths.hFourBefore} 0 ${tokens.lengths.hFourAfter}; font-size: ${tokens.sizes.hFour}; line-height: ${tokens.sizes.hFourLine}; font-weight: 800; }
+    .entry { margin: ${tokens.lengths.entryBefore} 0 ${tokens.lengths.entryAfter}; }
+    .entryHead { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+    time { flex: 0 0 ${tokens.lengths.entryDateWidth}; text-align: right; white-space: nowrap; color: ${tokens.colors.muted}; }
+    .entryHead h3 { min-width: 0; flex: 1 1 auto; }
+    .entryCenter, .field, p { margin: 0.12em 0; }
+    ul { margin: 0.16em 0 0.2em 1.15em; padding: 0; }
+    li { margin: 0.08em 0; }
+    .tag { display: inline-flex; align-items: center; margin-left: 0.34em; padding: 0 0.34em; border-radius: 3px; background: ${tokens.colors.tagBg}; color: ${tokens.colors.accent}; font-size: 1em; line-height: 1.12; font-weight: 700; vertical-align: baseline; }
+    @media screen { .page { box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18); } }
+    @media print { body { background: white; } .page { width: auto; min-height: auto; margin: 0; padding: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    ${logo ? `<img class="logo" src="${logo}" alt="">` : ""}
+    <header>
+      <div class="headerText">
+        <div class="name">${inlineHtml(meta.name || "Your Name")}</div>
+        ${renderContactLinesHtml(meta)}
+      </div>
+      ${avatar ? `<div class="avatarWrap"><img class="avatar" src="${avatar}" alt=""></div>` : ""}
+    </header>
+    ${renderSectionsHtml(sections, tokens)}
+  </main>
+</body>
+</html>`;
+}
+
+function buildHtmlResume(options = {}) {
+  const cwd = options.cwd || process.cwd();
+  const input = path.resolve(cwd, options.input || "examples/resume.md");
+  const output = path.resolve(cwd, options.output || "build/resume.html");
+  const config = options.config ? readJsonIfExists(path.resolve(cwd, options.config)) : {};
+  const source = fs.readFileSync(input, "utf8");
+  const [frontmatter, markdown] = parseFrontmatter(source);
+  const meta = { ...(config.resume || {}), ...frontmatter };
+  const sections = parseMarkdown(markdown, config.markdown || {});
+  const html = renderHtmlDocument(meta, sections, { config, cwd, input });
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  fs.writeFileSync(output, html, "utf8");
+  return { input, output };
+}
+
 function readJsonIfExists(filePath) {
   if (!filePath || !fs.existsSync(filePath)) return {};
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -444,7 +715,9 @@ if (require.main === module) {
 
 module.exports = {
   buildResume,
+  buildHtmlResume,
   parseFrontmatter,
   parseMarkdown,
-  renderDocument
+  renderDocument,
+  renderHtmlDocument
 };
