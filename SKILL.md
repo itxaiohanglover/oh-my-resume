@@ -65,7 +65,7 @@ Supported Markdown:
 - `###` entries, with optional inline tags and right-aligned time:
 
 ```md
-### Title`tag` <time>2024 - 2025</time>
+### Title`tag` <right>2024 - 2025</right>
 ```
 - `时间：` dates and `标签：` badges as compatibility field lines
 - any other `xxx：yyy` entry line as a normal field line

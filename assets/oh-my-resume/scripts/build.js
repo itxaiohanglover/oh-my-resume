@@ -5,6 +5,21 @@ const path = require("path");
 
 const packageRoot = path.resolve(__dirname, "..");
 
+let alignTags = {
+  centerOpen: "<center>", centerClose: "</center>",
+  leftOpen: "<left>", leftClose: "</left>",
+  rightOpen: "<right>", rightClose: "</right>"
+};
+function setAlignTags(opts) {
+  alignTags = {
+    centerOpen: opts.centerOpen || "<center>", centerClose: opts.centerClose || "</center>",
+    leftOpen: opts.leftOpen || "<left>", leftClose: opts.leftClose || "</left>",
+    rightOpen: opts.rightOpen || "<right>", rightClose: opts.rightClose || "</right>"
+  };
+}
+function escRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function tagRx(open, close) { return new RegExp(escRx(open) + '(.*?)' + escRx(close), 'gi'); }
+
 function parseFrontmatter(source) {
   const delimiter = source.startsWith("---\r\n") ? "\r\n" : source.startsWith("---\n") ? "\n" : null;
   if (!delimiter) {
@@ -58,6 +73,15 @@ function parseMarkdown(markdown, options = {}) {
   let entry = null;
   const dateFields = new Set((options.dateFields || ["时间", "日期", "date", "dates"]).map(normalizeFieldName));
   const tagFields = new Set((options.tagFields || ["标签", "tags"]).map(normalizeFieldName));
+  const CO = options.centerOpen || alignTags.centerOpen;
+  const CC = options.centerClose || alignTags.centerClose;
+  const LO = options.leftOpen || alignTags.leftOpen;
+  const LC = options.leftClose || alignTags.leftClose;
+  const RO = options.rightOpen || alignTags.rightOpen;
+  const RC = options.rightClose || alignTags.rightClose;
+  const rxCT = tagRx(CO, CC);
+  const rxLT = tagRx(LO, LC);
+  const rxRT = tagRx(RO, RC);
 
   function ensureSection() {
     if (!section) {
@@ -90,13 +114,14 @@ function parseMarkdown(markdown, options = {}) {
     }
 
     if (line.startsWith("### ")) {
-      const parsedHeading = parseEntryHeading(line.slice(4).trim());
+      const parsedHeading = parseEntryHeading(line.slice(4).trim(), { CO, CC, LO, LC, RO, RC });
       entry = {
         type: "entry",
         title: parsedHeading.title,
         date: parsedHeading.date,
         tags: parsedHeading.tags,
         center: parsedHeading.center,
+        left: parsedHeading.left,
         fields: [],
         bullets: [],
         paragraphs: []
@@ -112,6 +137,24 @@ function parseMarkdown(markdown, options = {}) {
       } else {
         entry.bullets.push(bullet[1].trim());
       }
+      continue;
+    }
+
+    // Full-line alignment wrapper → treat as paragraph
+    let wrappedLine = null;
+    const cFullRx = new RegExp('^' + escRx(CO) + '(.*)' + escRx(CC) + '$', 'i');
+    const lFullRx = new RegExp('^' + escRx(LO) + '(.*)' + escRx(LC) + '$', 'i');
+    const rFullRx = new RegExp('^' + escRx(RO) + '(.*)' + escRx(RC) + '$', 'i');
+    const cMatch = line.match(cFullRx);
+    const lMatch = line.match(lFullRx);
+    const rMatch = line.match(rFullRx);
+    if (cMatch) wrappedLine = CO + cMatch[1] + CC;
+    else if (lMatch) wrappedLine = LO + lMatch[1] + LC;
+    else if (rMatch) wrappedLine = RO + rMatch[1] + RC;
+
+    if (wrappedLine) {
+      if (entry) entry.paragraphs.push(wrappedLine);
+      else ensureSection().blocks.push({ type: "paragraph", text: wrappedLine });
       continue;
     }
 
@@ -133,14 +176,31 @@ function parseMarkdown(markdown, options = {}) {
   return sections;
 }
 
-function parseEntryHeading(value) {
+function parseEntryHeading(value, tagOpts = {}) {
+  const CO = tagOpts.CO || alignTags.centerOpen;
+  const CC = tagOpts.CC || alignTags.centerClose;
+  const LO = tagOpts.LO || alignTags.leftOpen;
+  const LC = tagOpts.LC || alignTags.leftClose;
+  const RO = tagOpts.RO || alignTags.rightOpen;
+  const RC = tagOpts.RC || alignTags.rightClose;
+  const rxCT = tagRx(CO, CC);
+  const rxLT = tagRx(LO, LC);
+  const rxRT = tagRx(RO, RC);
+
   let title = String(value);
   let date = "";
   const tags = [];
   let center = "";
+  let left = "";
 
-  // Extract <center> block first
-  title = title.replace(/<center>(.*?)<\/center>/gi, (_, content) => {
+  // Extract left block
+  title = title.replace(rxLT, (_, content) => {
+    left = content.trim();
+    return "";
+  });
+
+  // Extract center block
+  title = title.replace(rxCT, (_, content) => {
     center = content.trim();
     return "";
   });
@@ -155,7 +215,7 @@ function parseEntryHeading(value) {
     center = center.replace(/\s+/g, " ").trim();
   }
 
-  title = title.replace(/<time>(.*?)<\/time>/gi, (_, content) => {
+  title = title.replace(rxRT, (_, content) => {
     date = content.trim();
     return "";
   });
@@ -169,7 +229,8 @@ function parseEntryHeading(value) {
     title: title.replace(/\s+/g, " ").trim(),
     date,
     tags,
-    center: center ? { text: center, tags: centerTags } : null
+    center: center ? { text: center, tags: centerTags } : null,
+    left: left || null
   };
 }
 
@@ -228,11 +289,33 @@ function inline(text) {
       }
     }
 
-    if (value.startsWith("<center>", i)) {
-      const end = value.indexOf("</center>", i + 8);
+    const CO = alignTags.centerOpen, CC = alignTags.centerClose;
+    const LO = alignTags.leftOpen, LC = alignTags.leftClose;
+    const RO = alignTags.rightOpen, RC = alignTags.rightClose;
+
+    if (value.startsWith(CO, i)) {
+      const end = value.indexOf(CC, i + CO.length);
       if (end !== -1) {
-        result += `\\omrCenter{${inline(value.slice(i + 8, end))}}`;
-        i = end + 9;
+        result += `\\omrCenter{${inline(value.slice(i + CO.length, end))}}`;
+        i = end + CC.length;
+        continue;
+      }
+    }
+
+    if (value.startsWith(LO, i)) {
+      const end = value.indexOf(LC, i + LO.length);
+      if (end !== -1) {
+        result += `\\omrLeft{${inline(value.slice(i + LO.length, end))}}`;
+        i = end + LC.length;
+        continue;
+      }
+    }
+
+    if (value.startsWith(RO, i)) {
+      const end = value.indexOf(RC, i + RO.length);
+      if (end !== -1) {
+        result += `\\omrRight{${inline(value.slice(i + RO.length, end))}}`;
+        i = end + RC.length;
         continue;
       }
     }
@@ -289,11 +372,33 @@ function inlineHtml(text) {
       }
     }
 
-    if (value.startsWith("<center>", i)) {
-      const end = value.indexOf("</center>", i + 8);
+    const CO = alignTags.centerOpen, CC = alignTags.centerClose;
+    const LO = alignTags.leftOpen, LC = alignTags.leftClose;
+    const RO = alignTags.rightOpen, RC = alignTags.rightClose;
+
+    if (value.startsWith(CO, i)) {
+      const end = value.indexOf(CC, i + CO.length);
       if (end !== -1) {
-        result += `<span class="center">${inlineHtml(value.slice(i + 8, end))}</span>`;
-        i = end + 9;
+        result += `<span class="center">${inlineHtml(value.slice(i + CO.length, end))}</span>`;
+        i = end + CC.length;
+        continue;
+      }
+    }
+
+    if (value.startsWith(LO, i)) {
+      const end = value.indexOf(LC, i + LO.length);
+      if (end !== -1) {
+        result += `<span class="left">${inlineHtml(value.slice(i + LO.length, end))}</span>`;
+        i = end + LC.length;
+        continue;
+      }
+    }
+
+    if (value.startsWith(RO, i)) {
+      const end = value.indexOf(RC, i + RO.length);
+      if (end !== -1) {
+        result += `<span class="right">${inlineHtml(value.slice(i + RO.length, end))}</span>`;
+        i = end + RC.length;
         continue;
       }
     }
@@ -334,7 +439,13 @@ function renderEntry(entry) {
   const date = entry.date ? `\\tightdate{${inline(entry.date)}}` : "";
   const parts = [];
 
-  if (entry.center) {
+  if (entry.left && entry.center) {
+    const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
+    const cText = `${inline(entry.center.text)}${cTags}`;
+    parts.push(`\\datedsubsectionLC{${title}}{${inline(entry.left)}}{${cText}}{${date}}`);
+  } else if (entry.left) {
+    parts.push(`\\datedsubsectionL{${title}}{${inline(entry.left)}}{${date}}`);
+  } else if (entry.center) {
     const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
     const cText = `${inline(entry.center.text)}${cTags}`;
     parts.push(`\\datedsubsectionC{${title}}{${cText}}{${date}}`);
@@ -555,13 +666,15 @@ function renderEntryHtml(entry) {
   const bullets = entry.bullets.length
     ? `<ul>\n${entry.bullets.map((bullet) => `  <li>${inlineHtml(bullet)}</li>`).join("\n")}\n</ul>`
     : "";
+  const leftBlock = entry.left ? `<left>${inlineHtml(entry.left)}</left>` : "";
   const center = entry.center
     ? `<div class="entryCenter">${inlineHtml(entry.center.text)} ${(entry.center.tags || []).map((tag) => `<span class="tag">${inlineHtml(tag)}</span>`).join("")}</div>`
     : "";
   return `<article class="entry">
   <div class="entryHead">
+    ${leftBlock}
     <h3>${inlineHtml(entry.title)}${tags}</h3>
-    ${entry.date ? `<time>${inlineHtml(entry.date)}</time>` : ""}
+    ${entry.date ? `<right>${inlineHtml(entry.date)}</right>` : ""}
   </div>
   ${center}
   ${fields}
@@ -630,9 +743,12 @@ function renderHtmlDocument(meta, sections, options = {}) {
     h4 { margin: ${tokens.lengths.hFourBefore} 0 ${tokens.lengths.hFourAfter}; font-size: ${tokens.sizes.hFour}; line-height: ${tokens.sizes.hFourLine}; font-weight: 800; }
     .entry { margin: ${tokens.lengths.entryBefore} 0 ${tokens.lengths.entryAfter}; }
     .entryHead { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-    time { flex: 0 0 ${tokens.lengths.entryDateWidth}; text-align: right; white-space: nowrap; color: ${tokens.colors.muted}; }
+    right { flex: 0 0 ${tokens.lengths.entryDateWidth}; text-align: right; white-space: nowrap; color: ${tokens.colors.muted}; }
+    left { color: ${tokens.colors.muted}; }
     .entryHead h3 { min-width: 0; flex: 1 1 auto; }
-    .entryCenter, .field, p { margin: 0.12em 0; }
+    .entryCenter, .left, .field, p { margin: 0.12em 0; }
+    .left { text-align: left; }
+    .right { text-align: right; }
     ul { margin: 0.16em 0 0.2em 1.15em; padding: 0; }
     li { margin: 0.08em 0; }
     .tag { display: inline-flex; align-items: center; margin-left: 0.34em; padding: 0 0.34em; border-radius: 3px; background: ${tokens.colors.tagBg}; color: ${tokens.colors.accent}; font-size: 1em; line-height: 1.12; font-weight: 700; vertical-align: baseline; }
@@ -661,10 +777,12 @@ function buildHtmlResume(options = {}) {
   const input = path.resolve(cwd, options.input || "examples/resume.md");
   const output = path.resolve(cwd, options.output || "build/resume.html");
   const config = options.config ? readJsonIfExists(path.resolve(cwd, options.config)) : {};
+  const mdOpts = config.markdown || {};
+  setAlignTags(mdOpts);
   const source = fs.readFileSync(input, "utf8");
   const [frontmatter, markdown] = parseFrontmatter(source);
   const meta = { ...(config.resume || {}), ...frontmatter };
-  const sections = parseMarkdown(markdown, config.markdown || {});
+  const sections = parseMarkdown(markdown, mdOpts);
   const html = renderHtmlDocument(meta, sections, { config, cwd, input });
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, html, "utf8");
@@ -681,11 +799,13 @@ function buildResume(options = {}) {
   const input = path.resolve(cwd, options.input || "examples/resume.md");
   const output = path.resolve(cwd, options.output || "build/resume.tex");
   const config = options.config ? readJsonIfExists(path.resolve(cwd, options.config)) : {};
+  const mdOpts = config.markdown || {};
+  setAlignTags(mdOpts);
   const source = fs.readFileSync(input, "utf8");
   const [frontmatter, markdown] = parseFrontmatter(source);
   const meta = { ...(config.resume || {}), ...frontmatter };
   if (options.theme) meta.theme = options.theme;
-  const sections = parseMarkdown(markdown, config.markdown || {});
+  const sections = parseMarkdown(markdown, mdOpts);
   const tex = renderDocument(meta, sections, {
     cwd,
     input,

@@ -81,7 +81,7 @@ async function testDebugServerSurvivesLongRender() {
     "",
     "## Experience",
     "",
-    "### Debug Render <time>2026</time>",
+    "### Debug Render <right>2026</right>",
     "",
     "- Keeps the server alive after rendering."
   ].join("\n"));
@@ -163,7 +163,7 @@ async function testHtmlRendererBuildsStandalonePreview() {
     "",
     "## Experience",
     "",
-    "### Project`AI` <time>2026</time>",
+    "### Project`AI` <right>2026</right>",
     "",
     "- Built **fast** preview."
   ].join("\n"));

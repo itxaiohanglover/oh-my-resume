@@ -798,6 +798,12 @@ omrLinkColor: "37,99,235",
     markdown: {
       dateFields: ["时间", "日期", "date", "dates"],
       tagFields: ["标签", "tags"],
+      centerOpen: "<center>",
+      centerClose: "</center>",
+      leftOpen: "<left>",
+      leftClose: "</left>",
+      rightOpen: "<right>",
+      rightClose: "</right>",
       ...(config.markdown || {})
     }
   };
@@ -818,7 +824,13 @@ function mergeDebugConfig(current, incoming) {
     markdown: {
       ...(current.markdown || {}),
       dateFields: cleanStringList(normalized.markdown.dateFields),
-      tagFields: cleanStringList(normalized.markdown.tagFields)
+      tagFields: cleanStringList(normalized.markdown.tagFields),
+      centerOpen: cleanTag(normalized.markdown.centerOpen),
+      centerClose: cleanTag(normalized.markdown.centerClose),
+      leftOpen: cleanTag(normalized.markdown.leftOpen),
+      leftClose: cleanTag(normalized.markdown.leftClose),
+      rightOpen: cleanTag(normalized.markdown.rightOpen),
+      rightClose: cleanTag(normalized.markdown.rightClose)
     }
   };
 }
@@ -838,12 +850,28 @@ function cleanStringList(value) {
   return String(value || "").split(/[,，]/).map((item) => item.trim()).filter(Boolean);
 }
 
+function cleanTag(value) {
+  const s = String(value || "").trim();
+  if (!s || s.length > 20) return null;
+  if (/[\\{}]/.test(s)) return null;
+  return s;
+}
+
 function isRgb(value) {
   return /^\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}$/.test(value);
 }
 
 function isLength(value) {
-  return /^[0-9.]+(mm|cm|pt|em|ex)$/.test(value);
+  const numValue = String(value).trim();
+  // Check if it has unit
+  if (/^[0-9.]+(mm|cm|pt|em|ex)$/.test(numValue)) {
+    return true;
+  }
+  // Check if it's a plain number and add default unit
+  if (/^[0-9.]+$/.test(numValue)) {
+    return true;
+  }
+  return false;
 }
 
 function isFontName(value) {
@@ -1078,13 +1106,13 @@ function debugHtml(fileName) {
     }
     .settingsSection {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: stretch;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px;
       background: #fff;
       gap: 8px;
-      width: 600px;
     }
     .settingsTitle {
       margin: 0;
@@ -1094,6 +1122,14 @@ function debugHtml(fileName) {
       text-transform: uppercase;
       letter-spacing: 0.04em;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      align-self: flex-start;
+    }
+    .settingsTitle svg {
+      flex: 0 0 auto;
+      opacity: 0.7;
     }
     .settingsRow {
       display: flex;
@@ -1150,46 +1186,10 @@ function debugHtml(fileName) {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
-    .styleHint {
-      color: var(--muted);
-      font-size: 12px;
-      margin: 8px 0 12px;
-    }
-    details.advanced {
-      border-top: 1px solid var(--line);
-      margin-top: 12px;
-      padding-top: 12px;
-    }
-    details.advanced summary {
-      cursor: pointer;
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .styleGrid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 12px 14px;
-    }
-    .field {
-      display: grid;
-      gap: 5px;
-      min-width: 0;
-    }
-    .field label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 650;
-    }
-    .field input {
-      height: 32px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 0 9px;
-      font: 13px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      color: var(--text);
-      background: #fff;
+    .categoryGrid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .dialogActions {
       display: flex;
@@ -1207,7 +1207,6 @@ function debugHtml(fileName) {
       .workspace { grid-template-columns: 1fr; grid-template-rows: 48% 52%; }
       .editorPane { border-right: 0; border-bottom: 1px solid var(--line); }
       .quickMenu { grid-template-columns: 1fr; }
-      .styleGrid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1245,13 +1244,13 @@ function debugHtml(fileName) {
   </dialog>
   <dialog id="styleDialog">
     <div class="dialogHead">
-      <span>样式设置</span>
+      <span style="display:inline-flex;align-items:baseline;gap:8px;"><span>样式设置</span><span style="color:var(--muted);font-size:12px;font-weight:400;">数值会直接写入 omr.config.json，支持 mm、cm、pt、em 等 LaTeX 单位。</span></span>
       <button class="ghost" id="closeStyle">关闭</button>
     </div>
     <div class="styleBody">
       <div class="quickMenu">
         <section class="settingsSection">
-          <p class="settingsTitle">模板</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>模板</p>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">本地配置</span><select id="presetSelect"></select></span>
             <span class="menuItem"><span class="menuIcon">配置路径</span><input id="presetPath" placeholder="omr.styles/my-style.json"></span>
@@ -1261,41 +1260,68 @@ function debugHtml(fileName) {
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">版式</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>版式</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">头部对齐</span><select id="quickHeaderAlign"></select></span>
-            <span class="menuItem"><span class="menuIcon">风格切换</span><select id="quickSectionStyle"></select></span>
-            <span class="menuItem"><span class="menuIcon">页边距</span><input id="quickMargin" placeholder="8mm"></span>
+            <span class="menuItem"><span class="menuIcon">头部</span><select id="quickHeaderAlign"></select></span>
+            <span class="menuItem"><span class="menuIcon">风格</span><select id="quickSectionStyle"></select></span>
+            <span class="menuItem">
+              <span class="menuIcon">行间距（em）</span>
+              <select id="spacingLevel">
+                <option value="section">二级标题</option>
+                <option value="entry">三级标题</option>
+              </select>
+              <span style="font-size:11px;color:var(--muted);">上</span><input id="quickSpacingBefore" placeholder="0.58" style="width:38px;">
+              <span style="font-size:11px;color:var(--muted);">下</span><input id="quickSpacingAfter" placeholder="0.54" style="width:38px;">
+            </span>
+          </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">页边距（mm）</span><select id="quickMarginPreset">
+              <option value="">自定义</option>
+              <option value="8,8,8,8">普通</option>
+              <option value="6,6,6,6">窄</option>
+              <option value="10,10,10,10">适中</option>
+              <option value="14,14,10,10">宽</option>
+            </select><span style="font-size:11px;color:var(--muted);">上</span><input id="quickMarginTop" placeholder="8" style="width:62px;"><span style="font-size:11px;color:var(--muted);">下</span><input id="quickMarginBottom" placeholder="8" style="width:62px;"><span style="font-size:11px;color:var(--muted);">左</span><input id="quickMarginLeft" placeholder="8" style="width:62px;"><span style="font-size:11px;color:var(--muted);">右</span><input id="quickMarginRight" placeholder="8" style="width:62px;"></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">字体</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 7 5 4 19 4 19 7"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="9" y1="20" x2="15" y2="20"/></svg>字体</p>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">中文字体</span><select id="quickFont"></select></span>
-            <span class="menuItem"><span class="menuIcon">字号</span><input id="quickSize" placeholder="11.2pt"></span>
-            <span class="menuItem"><span class="menuIcon">行高</span><input id="quickLine" placeholder="14.5pt"></span>
+            <span class="menuItem"><span class="menuIcon">英文字体</span><select id="quickEnFont"></select></span>
+            <span class="menuItem"><span class="menuIcon">字号（pt）</span><select id="sizeLevel">
+              <option value="body">正文/列表</option>
+              <option value="section">二级标题</option>
+              <option value="entry">三级标题</option>
+            </select><input id="quickSize" placeholder="11.2" style="width:54px;"></span>
+            <span class="menuItem"><span class="menuIcon">行高（pt）</span><input id="quickLine" placeholder="14.5"></span>
+            <span class="menuItem"><span class="menuIcon">对齐方式</span><select id="alignTypeSelect">
+              <option value="center">居中</option>
+              <option value="left">左对齐</option>
+              <option value="right">右对齐</option>
+            </select><span style="font-size:11px;color:var(--muted);">开</span><input id="alignOpen" placeholder="<center>" style="width:80px;"><span style="font-size:11px;color:var(--muted);">闭</span><input id="alignClose" placeholder="</center>" style="width:80px;"><span style="font-size:10px;color:var(--muted);margin-left:4px;">请输入你喜欢的命名方式</span></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">主题</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>主题</p>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">预设</span><span class="swatches" id="quickTheme"></span></span>
-            <span class="menuItem"><span class="menuIcon">自定义RGB</span><input id="customColor" placeholder="R,G,B" style="width:80px"><button type="button" id="applyCustomColor" style="height:24px;font-size:11px;padding:0 8px;">应用</button></span>
+            <span class="menuItem"><span class="menuIcon">自定义</span><input type="color" id="customColor" value="#2563eb" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">链接色</span><input type="color" id="quickLinkColor" value="#2563eb" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">标签背景</span><input type="color" id="quickTagBg" value="#e5f1ff" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">标签文字</span><input type="color" id="quickTagText" value="#2563eb" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">标题样式</span><input type="color" id="quickSectionBg" value="#1f2937" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
           </div>
         </section>
         <section class="settingsSection">
-          <p class="settingsTitle">图片</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>图片</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">个人照片高度</span><input id="quickPhoto" placeholder="2.75cm"></span>
-            <span class="menuItem"><span class="menuIcon">学校logo高度</span><input id="quickLogo" placeholder="1.2cm"></span>
+            <span class="menuItem"><span class="menuIcon">照片右侧缩进（mm）</span><input id="quickPhotoInset" placeholder="0"></span>
+            <span class="menuItem"><span class="menuIcon">个人照片高度（cm）</span><input id="quickPhoto" placeholder="2.75"></span>
+            <span class="menuItem"><span class="menuIcon">学校logo高度（cm）</span><input id="quickLogo" placeholder="1.2"></span>
           </div>
         </section>
       </div>
-      <details class="advanced">
-        <summary>高级参数</summary>
-        <p class="styleHint">这些值会直接写入 omr.config.json，支持 mm、cm、pt、em 等 LaTeX 单位。</p>
-        <div class="styleGrid" id="styleGrid"></div>
-      </details>
     </div>
     <div class="dialogActions">
       <button class="ghost" id="resetStyle">重新加载</button>
@@ -1319,23 +1345,38 @@ function debugHtml(fileName) {
     const closeStyle = document.getElementById("closeStyle");
     const saveStyle = document.getElementById("saveStyle");
     const resetStyle = document.getElementById("resetStyle");
-    const styleGrid = document.getElementById("styleGrid");
     const presetSelect = document.getElementById("presetSelect");
     const presetPath = document.getElementById("presetPath");
     const presetFolder = document.getElementById("presetFolder");
     const pickPresetFolder = document.getElementById("pickPresetFolder");
     const applyPreset = document.getElementById("applyPreset");
     const quickFont = document.getElementById("quickFont");
+    const quickEnFont = document.getElementById("quickEnFont");
     const quickSize = document.getElementById("quickSize");
+    const sizeLevel = document.getElementById("sizeLevel");
     const quickLine = document.getElementById("quickLine");
-    const quickMargin = document.getElementById("quickMargin");
+    const spacingLevel = document.getElementById("spacingLevel");
+    const quickSpacingBefore = document.getElementById("quickSpacingBefore");
+    const quickSpacingAfter = document.getElementById("quickSpacingAfter");
+    const quickMarginPreset = document.getElementById("quickMarginPreset");
+    const quickMarginTop = document.getElementById("quickMarginTop");
+    const quickMarginBottom = document.getElementById("quickMarginBottom");
+    const quickMarginLeft = document.getElementById("quickMarginLeft");
+    const quickMarginRight = document.getElementById("quickMarginRight");
     const quickPhoto = document.getElementById("quickPhoto");
     const quickLogo = document.getElementById("quickLogo");
+    const quickPhotoInset = document.getElementById("quickPhotoInset");
     const quickHeaderAlign = document.getElementById("quickHeaderAlign");
     const quickSectionStyle = document.getElementById("quickSectionStyle");
     const quickTheme = document.getElementById("quickTheme");
     const customColor = document.getElementById("customColor");
-    const applyCustomColor = document.getElementById("applyCustomColor");
+    const quickTagBg = document.getElementById("quickTagBg");
+    const quickTagText = document.getElementById("quickTagText");
+    const quickSectionBg = document.getElementById("quickSectionBg");
+    const quickLinkColor = document.getElementById("quickLinkColor");
+    const alignTypeSelect = document.getElementById("alignTypeSelect");
+    const alignOpen = document.getElementById("alignOpen");
+    const alignClose = document.getElementById("alignClose");
     let currentConfig = null;
     let currentConfigPath = "omr.config.json";
     let uploadedPresetConfig = null;
@@ -1345,12 +1386,12 @@ function debugHtml(fileName) {
       ["center", "居中"]
     ];
     const sectionStyleOptions = [
-      ["minimal", "Minimal"],
-      ["simple", "Simple"],
-      ["classic", "Classic"],
-      ["premium", "Premium"],
-      ["refined", "Refined"],
-      ["professional", "Professional"]
+      ["minimal", "极简"],
+      ["simple", "简洁"],
+      ["classic", "经典"],
+      ["premium", "高级"],
+      ["refined", "雅致"],
+      ["professional", "专业"]
     ];
     const fontOptions = [
       ["Songti SC", "宋体"],
@@ -1358,6 +1399,32 @@ function debugHtml(fileName) {
       ["PingFang SC", "苹方"],
       ["Noto Serif CJK SC", "Noto Serif"]
     ];
+    const enFontOptions = [
+      ["TeX Gyre Termes", "TeX Gyre Termes"],
+      ["Times New Roman", "Times New Roman"],
+      ["TeX Gyre Pagella", "TeX Gyre Pagella"],
+      ["TeX Gyre Heros", "TeX Gyre Heros"],
+      ["Latin Modern Roman", "Latin Modern Roman"],
+      ["Latin Modern Sans", "Latin Modern Sans"],
+      ["Helvetica", "Helvetica"]
+    ];
+    const marginPresetOptions = [
+      ["", "自定义"],
+      ["8,8,8,8", "普通"],
+      ["6,6,6,6", "窄"],
+      ["10,10,10,10", "适中"],
+      ["14,14,10,10", "宽"]
+    ];
+    function applyMarginPreset(value) {
+      if (!value) return;
+      const parts = value.split(",");
+      if (parts.length !== 4) return;
+      quickMarginTop.value = parts[0];
+      quickMarginBottom.value = parts[1];
+      quickMarginLeft.value = parts[2];
+      quickMarginRight.value = parts[3];
+      applyQuickConfig();
+    }
     function calcTagBg(rgb) {
       const parts = rgb.split(",").map(n => Math.round(parseInt(n.trim()) * 0.1 + 229.5));
       return parts.join(",");
@@ -1371,33 +1438,9 @@ function debugHtml(fileName) {
       { name: "red", color: "155,0,0", tagBg: "245,230,230", sectionBg: "155,0,0" }
     ];
 
-    const styleFields = [
-      ["theme.colors.omrTagBg", "标签背景色"],
-      ["theme.colors.omrTagText", "标签文字色"],
-      ["theme.colors.omrSectionBg", "二级标题色块"],
-      ["theme.colors.omrLinkColor", "链接颜色"],
-      ["theme.lengths.omrPageMarginLeft", "左页边距"],
-      ["theme.lengths.omrPageMarginRight", "右页边距"],
-      ["theme.lengths.omrPageMarginTop", "上页边距"],
-      ["theme.lengths.omrPageMarginBottom", "下页边距"],
-["theme.lengths.omrPhotoHeight", "照片高度"],
-      ["theme.lengths.omrLogoHeight", "学校logo高度"],
-      ["theme.lengths.omrSectionBefore", "二级标题上间距"],
-      ["theme.lengths.omrSectionAfter", "二级标题下间距"],
-      ["theme.lengths.omrEntryBefore", "三级标题上间距"],
-      ["theme.lengths.omrEntryAfter", "三级标题下间距"],
-      ["theme.lengths.omrEntryDateWidth", "三级标题日期宽度"],
-      ["theme.lengths.omrPhotoRightInset", "照片右侧缩进"],
-      ["theme.fonts.omrBodyFont", "英文字体"],
-      ["theme.fonts.omrCJKMainFont", "中文字体"],
-      ["theme.sizes.omrBodyFontSize", "正文/列表字号"],
-["theme.sizes.omrSectionFontSize", "二级标题字号"],
-      ["theme.sizes.omrEntryFontSize", "三级标题字号"],
-      ["theme.options.omrHeaderAlign", "头部对齐(left/center)"],
-      ["theme.options.sectionStyle", "二级标题风格(跟随下拉)"],
-      ["markdown.dateFields", "日期字段名"],
-      ["markdown.tagFields", "标签字段名"]
-    ];
+    const categoryFields = {
+      font: [],
+    };
 
     async function loadState() {
       const response = await fetch("/api/state");
@@ -1405,8 +1448,9 @@ function debugHtml(fileName) {
       editor.value = state.markdown;
       currentConfig = state.config;
       currentConfigPath = state.configPath || "omr.config.json";
-      renderStyleFields();
+      renderCategoryFields();
       renderQuickControls();
+      captureAlignTags();
       await renderPresetControls();
       paths.textContent = state.input + " -> " + state.pdf;
       engineSelect.value = state.engine === "html" ? "html" : "latex";
@@ -1454,18 +1498,100 @@ function debugHtml(fileName) {
       }
     }
 
-    function renderStyleFields() {
-      styleGrid.innerHTML = "";
-      for (const [path, label] of styleFields) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "field";
-        const labelNode = document.createElement("label");
-        labelNode.textContent = label;
-        const input = document.createElement("input");
-        input.dataset.path = path;
-        input.value = getPath(currentConfig, path);
-        wrapper.append(labelNode, input);
-        styleGrid.appendChild(wrapper);
+    // Helper function to extract number from value
+    function extractNumber(value) {
+      if (!value) return "";
+      const match = value.toString().match(/^(\\d+(?:\\.\\d+)?)/);
+      return match ? match[1] : "";
+    }
+
+    function hexToRgb(hex) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return r + "," + g + "," + b;
+    }
+    function rgbToHex(rgb) {
+      const parts = String(rgb).split(",").map(s => parseInt(s.trim()));
+      if (parts.length !== 3 || parts.some(n => isNaN(n))) return "#000000";
+      return "#" + parts.map(n => Math.min(255, Math.max(0, n)).toString(16).padStart(2, "0")).join("");
+    }
+
+    // Helper function to get unit based on path
+    function getUnit(path) {
+      if (path.includes("FontSize") || path.includes("LineHeight")) return "pt";
+      if (path.includes("Margin") || path.includes("Width") || path.includes("Inset")) return "mm";
+      if (path.includes("Height")) return "cm";
+      if (path.includes("Before") || path.includes("After")) return "em";
+      return "";
+    }
+
+    function renderCategoryFields() {
+      for (const el of document.querySelectorAll(".categoryGrid")) {
+        const category = el.dataset.category;
+        const fields = categoryFields[category] || [];
+        el.innerHTML = "";
+        for (const [path, label] of fields) {
+          const fullValue = getPath(currentConfig, path) || "";
+          const isColor = path.startsWith("theme.colors.");
+          if (isColor) {
+            const span = document.createElement("span");
+            span.className = "menuItem";
+            const icon = document.createElement("span");
+            icon.className = "menuIcon";
+            icon.textContent = label;
+            const colorInput = document.createElement("input");
+            colorInput.type = "color";
+            colorInput.dataset.path = path;
+            colorInput.dataset.rgb = fullValue;
+            colorInput.value = rgbToHex(fullValue);
+            colorInput.style.cssText = "width:24px;height:24px;border:0;border-radius:3px;padding:0;cursor:pointer;background:transparent;flex:0 0 auto;";
+            colorInput.addEventListener("input", () => {
+              colorInput.dataset.rgb = hexToRgb(colorInput.value);
+            });
+            const textInput = document.createElement("input");
+            textInput.style.cssText = "width:70px;";
+            textInput.value = fullValue;
+            textInput.placeholder = "R,G,B";
+            textInput.addEventListener("input", () => {
+              const hex = rgbToHex(textInput.value);
+              colorInput.value = hex;
+              colorInput.dataset.rgb = textInput.value;
+            });
+            span.append(icon, colorInput, textInput);
+            el.appendChild(span);
+          } else if (path.endsWith("Font")) {
+            const span = document.createElement("span");
+            span.className = "menuItem";
+            const icon = document.createElement("span");
+            icon.className = "menuIcon";
+            icon.textContent = label;
+            const select = document.createElement("select");
+            select.dataset.path = path;
+            const options = path === "theme.fonts.omrBodyFont" ? enFontOptions : fontOptions;
+            for (const [value, text] of options) {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = text;
+              if (value === fullValue) option.selected = true;
+              select.appendChild(option);
+            }
+            span.append(icon, select);
+            el.appendChild(span);
+          } else {
+            const span = document.createElement("span");
+            span.className = "menuItem";
+            const icon = document.createElement("span");
+            icon.className = "menuIcon";
+            icon.textContent = label;
+            const input = document.createElement("input");
+            input.dataset.path = path;
+            const unit = getUnit(path);
+            input.value = unit ? extractNumber(fullValue) : fullValue;
+            span.append(icon, input);
+            el.appendChild(span);
+          }
+        }
       }
     }
 
@@ -1473,11 +1599,23 @@ function debugHtml(fileName) {
       fillSelect(quickHeaderAlign, alignOptions, getPath(currentConfig, "theme.options.omrHeaderAlign"));
       fillSelect(quickSectionStyle, sectionStyleOptions, getPath(currentConfig, "theme.options.sectionStyle") || "classic");
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
-      quickSize.value = getPath(currentConfig, "theme.sizes.omrBodyFontSize");
-      quickLine.value = getPath(currentConfig, "theme.sizes.omrBodyLineHeight");
-      quickMargin.value = getPath(currentConfig, "theme.lengths.omrPageMarginLeft");
-      quickPhoto.value = getPath(currentConfig, "theme.lengths.omrPhotoHeight");
-      quickLogo.value = getPath(currentConfig, "theme.lengths.omrLogoHeight");
+      fillSelect(quickEnFont, enFontOptions, getPath(currentConfig, "theme.fonts.omrBodyFont"));
+      renderSizeInput();
+      quickLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrBodyLineHeight"));
+      quickMarginTop.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginTop"));
+      quickMarginBottom.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginBottom"));
+      quickMarginLeft.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginLeft"));
+      quickMarginRight.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginRight"));
+      renderSpacingInputs();
+      fillSelect(quickMarginPreset, marginPresetOptions, "");
+      renderAlignControls();
+      quickPhoto.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoHeight"));
+      quickLogo.value = extractNumber(getPath(currentConfig, "theme.lengths.omrLogoHeight"));
+      quickPhotoInset.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoRightInset"));
+      quickTagBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagBg"));
+      quickTagText.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagText"));
+      quickSectionBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrSectionBg"));
+      quickLinkColor.value = rgbToHex(getPath(currentConfig, "theme.colors.omrLinkColor"));
       quickTheme.innerHTML = "";
       const activeColor = getPath(currentConfig, "theme.colors.omrTagText");
       for (const theme of themeOptions) {
@@ -1491,7 +1629,7 @@ function debugHtml(fileName) {
           setPath(currentConfig, "theme.colors.omrLinkColor", theme.color);
 setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
           setPath(currentConfig, "theme.colors.omrSectionBg", theme.sectionBg);
-          renderStyleFields();
+          renderCategoryFields();
           renderQuickControls();
         });
         quickTheme.appendChild(item);
@@ -1542,13 +1680,31 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
         cursor = cursor[parts[i]];
       }
       const key = parts[parts.length - 1];
-      cursor[key] = path.startsWith("markdown.") ? value.split(/[,，]/).map((item) => item.trim()).filter(Boolean) : value.trim();
+      const isList = path.startsWith("markdown.") && !path.endsWith("Open") && !path.endsWith("Close");
+      cursor[key] = isList ? value.split(/[,，]/).map((item) => item.trim()).filter(Boolean) : value.trim();
     }
 
     function collectStyleConfig() {
       const config = { theme: { colors: {}, lengths: {}, fonts: {}, sizes: {} }, markdown: {} };
-      for (const input of styleGrid.querySelectorAll("input")) {
-        setPath(config, input.dataset.path, input.value);
+      for (const grid of document.querySelectorAll(".categoryGrid")) {
+        for (const el of grid.querySelectorAll("input, select")) {
+          const path = el.dataset.path;
+          if (!path) continue;
+          if (path.startsWith("theme.colors.")) {
+            const rgb = (el.type === "color" ? el.dataset.rgb : el.value).trim();
+            if (rgb) setPath(config, path, rgb);
+          } else {
+            const value = el.value.trim();
+            if (value) {
+              const unit = getUnit(path);
+              if (unit && !isNaN(parseFloat(value))) {
+                setPath(config, path, value + unit);
+              } else {
+                setPath(config, path, value);
+              }
+            }
+          }
+        }
       }
       return config;
     }
@@ -1557,31 +1713,45 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       setPath(currentConfig, "theme.options.omrHeaderAlign", quickHeaderAlign.value);
       setPath(currentConfig, "theme.options.sectionStyle", quickSectionStyle.value);
       setPath(currentConfig, "theme.fonts.omrCJKMainFont", quickFont.value);
-      setPath(currentConfig, "theme.sizes.omrBodyFontSize", quickSize.value);
-      setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value);
-      setPath(currentConfig, "theme.lengths.omrPageMarginLeft", quickMargin.value);
-      setPath(currentConfig, "theme.lengths.omrPageMarginRight", quickMargin.value);
-      setPath(currentConfig, "theme.lengths.omrPageMarginTop", quickMargin.value);
-      setPath(currentConfig, "theme.lengths.omrPageMarginBottom", quickMargin.value);
-      setPath(currentConfig, "theme.lengths.omrPhotoHeight", quickPhoto.value);
-      setPath(currentConfig, "theme.lengths.omrLogoHeight", quickLogo.value);
-      renderStyleFields();
+      setPath(currentConfig, "theme.fonts.omrBodyFont", quickEnFont.value);
+      setPath(currentConfig, "theme.sizes.omr" + ({body:"Body",section:"Section",entry:"Entry"})[sizeLevel.value] + "FontSize", quickSize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value + "pt");
+      setPath(currentConfig, "theme.lengths.omrPageMarginTop", quickMarginTop.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrPageMarginBottom", quickMarginBottom.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrPageMarginLeft", quickMarginLeft.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrPageMarginRight", quickMarginRight.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrPhotoHeight", quickPhoto.value + "cm");
+      setPath(currentConfig, "theme.lengths.omrLogoHeight", quickLogo.value + "cm");
+      setPath(currentConfig, "theme.lengths.omrPhotoRightInset", quickPhotoInset.value + "mm");
+      renderCategoryFields();
+      saveConfigToServer();
     }
 
     async function saveStyleConfig() {
       saveStyle.disabled = true;
       message.className = "";
       message.textContent = "Saving style...";
+      // Sync alignment tags in Markdown
+      for (const t of ["center","left","right"]) {
+        const oldOpen = origAlignTags[t + "Open"];
+        const oldClose = origAlignTags[t + "Close"];
+        const newOpen = getPath(currentConfig, "markdown." + t + "Open");
+        const newClose = getPath(currentConfig, "markdown." + t + "Close");
+        if (oldOpen && oldClose && (oldOpen !== newOpen || oldClose !== newClose)) {
+          editor.value = editor.value.split(oldOpen).join(newOpen).split(oldClose).join(newClose);
+        }
+      }
       try {
         const response = await fetch("/api/config", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ config: collectStyleConfig() })
+          body: JSON.stringify({ config: currentConfig })
         });
         const data = await response.json();
         if (!data.ok) throw new Error(data.error || "Style save failed.");
         currentConfig = data.config;
-        renderStyleFields();
+        captureAlignTags();
+        renderCategoryFields();
         styleDialog.close();
         message.textContent = "Saved " + data.path;
       } catch (error) {
@@ -1612,7 +1782,7 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
         if (!data.ok) throw new Error(data.error || "模板应用失败。");
         currentConfig = data.config;
         uploadedPresetConfig = null;
-        renderStyleFields();
+        renderCategoryFields();
         renderQuickControls();
         message.textContent = "已应用模板 " + data.path;
       } catch (error) {
@@ -1674,7 +1844,7 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
 
     closeError.addEventListener("click", () => errorDialog.close());
     closeStyle.addEventListener("click", () => styleDialog.close());
-    styleButton.addEventListener("click", () => styleDialog.showModal());
+    styleButton.addEventListener("click", () => { captureAlignTags(); styleDialog.showModal(); });
     applyPreset.addEventListener("click", applyStylePreset);
     pickPresetFolder.addEventListener("click", () => presetFolder.click());
     presetFolder.addEventListener("change", async () => {
@@ -1699,31 +1869,99 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     quickHeaderAlign.addEventListener("change", applyQuickConfig);
     quickSectionStyle.addEventListener("change", applyQuickConfig);
     quickFont.addEventListener("change", applyQuickConfig);
+    quickEnFont.addEventListener("change", applyQuickConfig);
+    function renderSizeInput() {
+      const map = { body: "omrBodyFontSize", section: "omrSectionFontSize", entry: "omrEntryFontSize" };
+      quickSize.value = extractNumber(getPath(currentConfig, "theme.sizes." + map[sizeLevel.value]));
+    }
+    sizeLevel.addEventListener("change", renderSizeInput);
     quickSize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);
-    quickMargin.addEventListener("input", applyQuickConfig);
+    quickMarginTop.addEventListener("input", applyQuickConfig);
+    quickMarginBottom.addEventListener("input", applyQuickConfig);
+    quickMarginLeft.addEventListener("input", applyQuickConfig);
+    quickMarginRight.addEventListener("input", applyQuickConfig);
+    function renderSpacingInputs() {
+      const level = spacingLevel.value;
+      quickSpacingBefore.value = extractNumber(getPath(currentConfig, "theme.lengths.omr" + (level === "section" ? "Section" : "Entry") + "Before"));
+      quickSpacingAfter.value = extractNumber(getPath(currentConfig, "theme.lengths.omr" + (level === "section" ? "Section" : "Entry") + "After"));
+    }
+    function saveSpacing() {
+      const level = spacingLevel.value;
+      const prefix = "theme.lengths.omr" + (level === "section" ? "Section" : "Entry");
+      setPath(currentConfig, prefix + "Before", quickSpacingBefore.value + "em");
+      setPath(currentConfig, prefix + "After", quickSpacingAfter.value + "em");
+      saveConfigToServer();
+    }
+    spacingLevel.addEventListener("change", () => { renderSpacingInputs(); });
+    quickSpacingBefore.addEventListener("input", saveSpacing);
+    quickSpacingAfter.addEventListener("input", saveSpacing);
+    quickMarginPreset.addEventListener("change", () => {
+      applyMarginPreset(quickMarginPreset.value);
+    });
     quickPhoto.addEventListener("input", applyQuickConfig);
     quickLogo.addEventListener("input", applyQuickConfig);
+    quickPhotoInset.addEventListener("input", applyQuickConfig);
     saveStyle.addEventListener("click", saveStyleConfig);
-    applyCustomColor.addEventListener("click", () => {
-      const raw = customColor.value;
-      const rgb = raw.replace(/[，]/g, ",").trim();
-      const parts = rgb.split(",").map(s => s.trim());
-      if (parts.length !== 3 || parts.some(p => isNaN(p) || p === "" || parseInt(p) < 0 || parseInt(p) > 255)) {
-        message.className = "error";
-        message.textContent = "请输入有效RGB值，如: 100,150,200 (当前输入: " + raw + ")";
-        return;
-      }
+    let saveTimer = null;
+    function saveConfigToServer() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        try {
+          const response = await fetch("/api/config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ config: currentConfig })
+          });
+          const data = await response.json();
+          if (data.ok) {
+            message.className = "";
+            message.textContent = "已保存 " + new Date().toLocaleTimeString();
+          }
+        } catch (e) { /* silent */ }
+      }, 300);
+    }
+    customColor.addEventListener("input", () => {
+      const rgb = hexToRgb(customColor.value);
       const tagBg = calcTagBg(rgb);
       setPath(currentConfig, "theme.colors.omrTagText", rgb);
       setPath(currentConfig, "theme.colors.omrLinkColor", rgb);
       setPath(currentConfig, "theme.colors.omrTagBg", tagBg);
       setPath(currentConfig, "theme.colors.omrSectionBg", rgb);
-      renderStyleFields();
+      renderCategoryFields();
       renderQuickControls();
-      message.className = "";
-      message.textContent = "已应用自定义颜色";
+      saveConfigToServer();
     });
+    function applyColorPick(picker, configPath) {
+      setPath(currentConfig, configPath, hexToRgb(picker.value));
+      renderCategoryFields();
+      renderQuickControls();
+      saveConfigToServer();
+    }
+    quickTagBg.addEventListener("input", () => applyColorPick(quickTagBg, "theme.colors.omrTagBg"));
+    quickTagText.addEventListener("input", () => applyColorPick(quickTagText, "theme.colors.omrTagText"));
+    quickSectionBg.addEventListener("input", () => applyColorPick(quickSectionBg, "theme.colors.omrSectionBg"));
+    quickLinkColor.addEventListener("input", () => applyColorPick(quickLinkColor, "theme.colors.omrLinkColor"));
+    let origAlignTags = {};
+    function captureAlignTags() {
+      for (const t of ["center","left","right"]) {
+        origAlignTags[t + "Open"] = getPath(currentConfig, "markdown." + t + "Open");
+        origAlignTags[t + "Close"] = getPath(currentConfig, "markdown." + t + "Close");
+      }
+    }
+    function renderAlignControls() {
+      const type = alignTypeSelect.value;
+      alignOpen.value = getPath(currentConfig, "markdown." + type + "Open");
+      alignClose.value = getPath(currentConfig, "markdown." + type + "Close");
+    }
+    function saveAlignControls() {
+      const type = alignTypeSelect.value;
+      setPath(currentConfig, "markdown." + type + "Open", alignOpen.value);
+      setPath(currentConfig, "markdown." + type + "Close", alignClose.value);
+    }
+    alignTypeSelect.addEventListener("change", renderAlignControls);
+    alignOpen.addEventListener("input", saveAlignControls);
+    alignClose.addEventListener("input", saveAlignControls);
     resetStyle.addEventListener("click", loadState);
     engineSelect.addEventListener("change", syncEngineActions);
     renderButton.addEventListener("click", render);
