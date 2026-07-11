@@ -40,6 +40,7 @@ Oh My Resume 围绕这三个核心理念构建：
   <em> Windows 下的工作流演示</em><br/>
   <img src="assets/workflow-demo-win.gif" alt="Workflow Demo" />
 </p>
+
 ---
 
 ## 为什么选择 Oh My Resume？
