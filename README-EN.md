@@ -1,86 +1,66 @@
-<div align="center">
-  <img src="assets/logo_new.svg" width="100px" alt="Oh My Resume" />
-  <h1>Oh My Resume</h1>
-  <p>AI-Powered Markdown Resume Engineering System</p>
-  <p align="center">
-  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>
-  <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>
-</p>
-  <p>
-    <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
-    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform" />
-  </p>
-</div>
+#   <img src="assets/oh-my-resume-logo.png" width="60px" alt="Oh My Resume" />Oh My Resume
 
-
->  Oh My Resume is a Skill-first Markdown resume system. It's built for people who treat their resume as a long-term asset: your resume shouldn't be locked inside a website form — it should be as readable, editable, traceable, and reusable as code.
-
-##   Core Philosophy
-
--  **Markdown is the single source of truth.**
--  **AI Coding Agent collaborates with you to polish content.**
--  **XeLaTeX produces high-quality PDF output.**
--  **Styles are controlled by readable parameters, not drag-and-drop text boxes.**
--  **All files are local, version-controllable, and free to fork.**
-
-![Oh My Resume example](assets/example.png)
+> A Skill-first Markdown resume engine — making your career narrative as readable, editable, and traceable as code.
 
 <p align="center">
-  <em>Workflow demo on Windows (WIP)</em><br/>
+  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a><!--
+  --><a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a><!--
+  --><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a><!--
+  --><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+</p>
+![Oh My Resume example](assets/example.png)
+
+⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
+🚀 [Quick start](#-quick-start) ·
+📝 [Markdown Format](#-markdown-format)
+
+---
+
+A truly valuable resume is not a one-off PDF export. It is a living career record — carrying your experiences, judgments, decisions, and growth over time.
+
+Maintaining a resume over the long term demands three core capabilities:
+
+- **Context** — understand the value behind each experience.
+  A project is more than a stack of technologies; it is a complete narrative built around problems, decisions, challenges, and results.
+
+- **Iteration** — refine continuously.
+  Great resumes are never finished in one sitting. They emerge through feedback, revision, and refactoring.
+
+- **Ownership** — retain full control over your career data.
+  Your experience should never be locked inside a platform or template. It should remain readable, editable, traceable, and reusable — forever.
+
+Oh My Resume is built around these three principles:
+
+**Context · Iteration · Ownership**
+
+On this foundation, the **Agent acts as an intelligent collaborator**, participating throughout the resume-building process — from organizing content and refining phrasing to generating the final output — helping turn personal experience into a high-quality career narrative.
+
+<p align="center">
+  <em>Workflow demo on Windows</em><br/>
   <img src="assets/workflow-demo-win.gif" alt="Workflow Demo" />
 </p>
 
 ---
 
-##   Design Philosophy
+## Why Oh My Resume?
 
-> Most resume tools optimize for the "first export". **Oh My Resume optimizes for the "tenth iteration".**
+This space already has many mature products, each solving different problems. Oh My Resume doesn't try to replicate an online resume builder — it takes a different path: **local, free, programmable, and deeply collaborable with AI Agents.**
 
-A great resume isn't a pretty poster — it's a highly compressed career narrative: judgment, trade-offs, projects, evidence, results. The hard part isn't choosing a template; it's deciding what's worth writing, how to make it credible, and how to maintain it as your experience evolves.
+|          | [WonderCV](https://www.wondercv.com/) | [LaoYu Resume](https://www.laoyujianli.com/) | [OneResume](https://github.com/virantha/one_resume) | LaTeX Templates | **Oh My Resume** |
+| :------: | ------------------------------------- | ---------------------------------------- | --------------------------------------------------- | :------------: | ---------------- |
+| Core Positioning | Online resume builder | Online resume builder | Source-driven resume generation | Document typesetting | **Markdown Resume Engineering System** |
+| Content Source | Platform data | Platform forms | YAML data | TeX source | **Markdown files** |
+| Content Editing | Visual editor | Form-based | Data configuration | Manual authoring | **Markdown + Agent collaboration** |
+| Generation Pipeline | Edit → Export | Edit → Export | Data → Template → PDF | TeX → PDF | **Markdown → Skill → XeLaTeX → PDF** |
+| Version Control | Platform saves | Platform saves | File-based | Git optional | **Git-native** |
+| Content Iteration | Per-application | Quick edits | Template reuse | Typesetting tweaks | **Long-term maintenance** |
+| Style Control | Template selection | Template config | Template modification | TeX customization | **JSON-driven configuration** |
+| Data Ownership | Platform-managed | Platform-managed | Local files | Local files | **Local files, free to fork** |
+| AI Capability | Content generation | Copy optimization | No native AI | None | **Agent understands context and assists refinement** |
 
-That's why Oh My Resume treats your resume as an engineering artifact:
+##  Quick Start
 
--  **Content is plain text.** Diff, review, rewrite, commit to Git.
--  **Layout is deterministic.** The same Markdown always produces the same PDF.
--  **AI is a collaborator, not a form assistant.** Codex or Claude Code can read your experience, project repos, and context to help rewrite bullets, compress content, adjust layout, and regenerate PDFs.
--  **Styles are explicit parameters.** Fonts, margins, tag colors, heading spacing, photo size, line height — all in `omr.config.json`.
--  **No platform lock-in.** Input is Markdown, output is a standard PDF, the renderer ships with the Skill inside your repo.
-
----
-
-##   Why Not a Resume Website?
-
-This space has many mature products, each solving different problems. Oh My Resume doesn't try to replicate an online resume builder — it takes a different path: **local, free, programmable, deeply collaborable with AI Agents.**
-
-| Tool | Data Model | Workflow | AI Capability | Ownership | Iteration |
-|------|------------|----------|---------------|-----------|-----------|
-|  [WonderCV](https://www.wondercv.com/) | Proprietary JSON + templates | Online editor + form fill | AI-assisted content | Platform-bound | Export-focused |
-|  [LaoYu Resume](https://www.laoyujianli.com/) | Form / online structure | Template-driven fast generation | Basic AI rewrite | Platform-locked | Weak versioning |
-|  [OneResume](https://github.com/virantha/one_resume) | YAML data structure | CLI / template rendering | No native AI | Open-source | Multi-version, not Git-first |
-|  LaTeX Templates | TeX source | Manual / compilation | No AI | Fully controllable | High iteration cost |
-|  **Oh My Resume** | **Markdown + Config** | **CLI + Agent + Debug UI** | **Agent-native (Codex / Claude)** | **Fully local / forkable** | **Git-first + long-term design** |
-
-Our advantage isn't "the most templates":
-
--  **Free**: Run locally. No subscription required for core export.
--  **Own your source**: Your resume source belongs to you, not a platform.
--  **Agent-native**: Designed for Codex / Claude Code to read context and continuously optimize.
--  **Markdown-first**: Writing feels like taking notes, not filling forms.
--  **TeX-quality PDF**: Professional-grade output suitable for job applications.
--  **Fully customizable**: Fine-grained control from font size and line height to margin and color — all as precise values.
--  **Versionable**: Every application, every role-specific version tracked in Git.
-
-The goal isn't to beat every resume website on every feature — it's to provide a better workflow for engineers, creators, and high-frequency iterators: text files, repos, automation, review, continuous iteration.
-
----
-
-##   Quick Start
-
-###   Installation
-
-Install this repo as a Codex or Claude Code Skill. Restart your agent if required.
-
-The repository root is the Skill folder:
+Install this repository as a Codex or Claude Code Skill:
 
 ```text
 oh-my-resume/
@@ -89,68 +69,84 @@ oh-my-resume/
   assets/oh-my-resume/
 ```
 
-###   Using an Agent
+If your tool requires an Agent restart, restart once after installation.
 
-Just ask your Agent:
+###  Agent Workflow
 
-```text
+Oh My Resume is not an online editor — it lets your Agent participate directly in the resume-building process:
+
+```
 Use $oh-my-resume to create my resume PDF from resume.md.
 ```
 
-The Skill will:
+The Agent automatically:
 
--  Check Node.js, XeLaTeX, latexmk;
--  Initialize a sample resume if needed;
--  Render Markdown to PDF;
--  Place generated TeX and logs under `build/`;
--  Report clear input and output paths.
+- Checks Node.js, XeLaTeX, and latexmk environments;
+- Reads the Markdown resume content;
+- Generates styles according to configuration;
+- Renders the PDF;
+- Reports output paths and build information.
 
-###   Using CLI
+Debug mode:
 
-```bash
-node assets/oh-my-resume/scripts/cli.js doctor
-node assets/oh-my-resume/scripts/cli.js pdf resume.md
 ```
-
-###   Debug Preview
-
-For iterative editing, launch the local debug page:
-
-```text
 Use $oh-my-resume to debug resume.md.
 ```
 
-The page includes:
+Launches a local preview environment for rapid content and style iteration.
 
--  Left panel: Markdown editor;
--  Right panel: PDF preview;
--  `Render PDF` button — saves Markdown and regenerates the PDF;
--  `Style Settings` button — adjust fonts, spacing, colors, margins, photo size;
--  Free-form numeric input, so values like `10.85pt`, `0.41em` work out of the box.
+###  Windows First-Time Setup
 
-```bash
-node assets/oh-my-resume/scripts/cli.js debug resume.md
+Windows users should prepare the local TeX environment before generating a PDF for the first time:
+
+```bat
+cd assets\oh-my-resume
+install.bat
 ```
 
-The debug server runs until you stop the process.
+`install.bat` invokes `scripts\install.ps1`, refreshes the TeX path visible to the current process, persists `OMR_TEX_PATH` for future terminal sessions, and runs `node scripts\cli.js doctor`. The script prefers an existing MiKTeX or TeX Live installation.
+
+PowerShell / CI can run directly:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -PersistUserEnv -VerifyPdf
+```
 
 ---
 
-##  Features
+##  Markdown Format
 
--  Markdown resume format
--  Bundled CLI — no npm install required
--  One-command PDF output: `resume.md` → `resume.pdf`
--  LaTeX toolchain under `build/`
--  Visual debug editor with live preview
--  CJK-optimized typography
--  Fine-grained style control (pt / mm / em)
+Oh My Resume uses Markdown as the single source of truth.
+
+Example:
+
+```md
+### Project Title`Tag` <right>Jan 2025 - Aug 2025</right>
+
+- Project description
+  - Technical details
+    - Quantified results
+```
+
+Supports:
+
+- `##` for resume sections
+- `###` for experience entries
+- `` `Tag` `` for rendered tags
+- Custom tag rendering and text alignment
+- `-` multi-level list auto-mapping
+- `**bold**` for emphasis
+- `[text](link)` preserved as clickable links
 
 ---
 
-##   Configuration
+##  Configuration System
 
-Style settings go in `omr.config.json`:
+All visual parameters are controlled through `omr.config.json`.
+
+Includes: fonts, page margins, line spacing, theme colors, image dimensions, and more.
+
+Example:
 
 ```json
 {
@@ -183,9 +179,38 @@ Style settings go in `omr.config.json`:
 
 For full theme customization, copy and edit `themes/classic.tex` after initialization.
 
+### Configuration Priority
+
+Oh My Resume reads local configuration from the current working directory in this order:
+
+1. CLI argument `--config path/to/config.json`
+2. Current directory `omr.config.json`
+3. Skill default configuration
+
+> Skill updates will never overwrite your current resume style. As long as `omr.config.json` stays in your resume directory, it takes priority over built-in defaults.
+
+### Local Style Templates
+
+Save frequently-used styles under `omr.styles/` in the current directory:
+
+```text
+omr.styles/
+  current-comfort.json
+  compact.json
+  interview.json
+```
+
+The Debug page's "Style Settings → Template" picker only reads local templates from the current directory. Without `omr.styles/*.json`, the dropdown shows an empty state. You can also enter any relative path in the "Config Path" field, for example:
+
+```text
+omr.styles/current-comfort.json
+```
+
+Or click "Open Folder" to select a folder containing JSON config files — the page will read and apply the configuration. Applying a template only merges `theme` and `markdown` settings; it never modifies the Markdown content, input path, or output path.
+
 ---
 
-##   Requirements
+##  Requirements
 
 The Skill auto-checks:
 
@@ -193,11 +218,23 @@ The Skill auto-checks:
 -  XeLaTeX
 -  latexmk
 
+HTML preview does not require TeX. `html-pdf` / "HTML Export PDF" requires Google Chrome, Microsoft Edge, or Chromium installed locally; set this when auto-detection fails:
+
+```bash
+export OMR_HTML_PDF_BROWSER="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+```
+
 ###   macOS
 
 ```bash
 brew install --cask mactex-no-gui
 ```
+
+###   Windows
+
+- Install [MiKTeX Basic](https://miktex.org/download), or install [TeX Live](https://tug.org/texlive/)
+- Install [Strawberry Perl](https://strawberryperl.com/)
+- Run `assets\oh-my-resume\install.bat`
 
 ###   Ubuntu/Debian
 
@@ -207,7 +244,7 @@ sudo apt-get install latexmk texlive-xetex texlive-lang-chinese
 
 ---
 
-##   License
+##  License
 
 This project is licensed under the [MIT License](LICENSE).
 
