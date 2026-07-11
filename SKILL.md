@@ -69,7 +69,13 @@ Supported Markdown:
 ```
 - `时间：` dates and `标签：` badges as compatibility field lines
 - any other `xxx：yyy` entry line as a normal field line
-- bullets for achievements
+- bullets for achievements, including nested bullets by indentation:
+
+```md
+- Level 1
+  - Level 2
+    - Level 3
+```
 - `**bold**`, `` `tag` ``, and Markdown links
 
 4. Generate the PDF by passing the Markdown file:

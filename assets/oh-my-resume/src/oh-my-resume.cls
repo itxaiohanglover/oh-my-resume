@@ -108,7 +108,10 @@
   \omrApplyLayout
   \omrApplyFonts
   \setlist{noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt}
-  \setlist[itemize]{topsep=1pt, partopsep=0pt, parsep=1.2pt, itemsep=1.2pt, leftmargin=1.4pc}
+  \setlist[itemize]{topsep=1pt, partopsep=0pt, parsep=1.2pt, itemsep=1.2pt, label=\textbullet}
+  \setlist[itemize,1]{leftmargin=1.4pc, label=\textbullet}
+  \setlist[itemize,2]{leftmargin=1.2pc, topsep=0.4pt, parsep=0.4pt, itemsep=0.4pt, label=\textbullet}
+  \setlist[itemize,3]{leftmargin=1pc, topsep=0.2pt, parsep=0.2pt, itemsep=0.2pt, label=\textbullet}
   \setlist[enumerate]{topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt, leftmargin=1.5pc}
   \titleformat{\section}{\normalsize\bfseries\raggedright}{}{0em}{}
   \titlespacing*{\section}{0cm}{*0.9}{*0.25}

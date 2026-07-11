@@ -6,7 +6,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const cli = require("./cli");
-const { buildHtmlResume } = require("./build");
+const { buildHtmlResume, parseMarkdown, renderHtmlDocument } = require("./build");
 
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -188,6 +188,27 @@ async function testHtmlRendererBuildsStandalonePreview() {
   assert.match(html, /@media print/);
 }
 
+async function testNestedBulletsPreserveMarkdownIndentation() {
+  const sections = parseMarkdown([
+    "## Experience",
+    "",
+    "### Project <time>2026</time>",
+    "- Top level",
+    "  - Second level",
+    "    - Third level"
+  ].join("\n"));
+  const bullets = sections[0].blocks[0].bullets;
+  assert.deepStrictEqual(bullets, [
+    { type: "bullet", level: 1, text: "Top level" },
+    { type: "bullet", level: 2, text: "Second level" },
+    { type: "bullet", level: 3, text: "Third level" }
+  ]);
+  const html = renderHtmlDocument({ name: "Nested" }, sections, { config: {} });
+  assert.match(html, /<li>Top level\n<ul>/);
+  assert.match(html, /<li>Second level\n<ul>/);
+  assert.match(html, /<li>Third level<\/li>/);
+}
+
 async function testHtmlPdfBrowserCanUseExplicitPath() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-browser-test-"));
   const browser = path.join(tempDir, process.platform === "win32" ? "chrome.cmd" : "chrome");
@@ -201,6 +222,7 @@ async function main() {
   await testWindowsInstallScriptsAreWired();
   await testLocalPresetsOnlyListCurrentDirectoryJson();
   await testHtmlRendererBuildsStandalonePreview();
+  await testNestedBulletsPreserveMarkdownIndentation();
   await testHtmlPdfBrowserCanUseExplicitPath();
 }
 

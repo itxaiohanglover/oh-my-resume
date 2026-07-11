@@ -130,12 +130,13 @@ function parseMarkdown(markdown, options = {}) {
       continue;
     }
 
-    const bullet = line.match(/^[-*]\s+(.*)$/);
+    const bullet = rawLine.match(/^(\s*)[-*]\s+(.*)$/);
     if (bullet) {
+      const item = { type: "bullet", level: bulletLevel(bullet[1]), text: bullet[2].trim() };
       if (!entry) {
-        ensureSection().blocks.push({ type: "bullet", text: bullet[1].trim() });
+        ensureSection().blocks.push(item);
       } else {
-        entry.bullets.push(bullet[1].trim());
+        entry.bullets.push(item);
       }
       continue;
     }
@@ -243,6 +244,25 @@ function splitList(value) {
     .split(/[,，、|]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function bulletLevel(indent) {
+  const width = String(indent || "").replace(/\t/g, "    ").length;
+  if (width <= 0) return 1;
+  return width >= 4 ? 3 : 2;
+}
+
+function buildBulletTree(bullets) {
+  const root = [];
+  const stack = [{ level: 0, children: root }];
+  for (const bullet of bullets) {
+    const level = Math.max(1, Math.min(3, Number(bullet.level) || 1));
+    while (stack.length > 1 && stack[stack.length - 1].level >= level) stack.pop();
+    const item = { text: bullet.text, children: [] };
+    stack[stack.length - 1].children.push(item);
+    stack.push({ level, children: item.children });
+  }
+  return root;
 }
 
 function escapeLatex(text) {
@@ -433,6 +453,21 @@ function renderContactLines(meta) {
   return allLines.map((line) => `\\contactLine{${inline(line)}}`).join("\n    ");
 }
 
+function renderBulletTreeLatex(items, depth = 1) {
+  if (!items.length) return "";
+  const lines = ["\\begin{itemize}"];
+  for (const item of items) {
+    lines.push(`  \\item ${inline(item.text)}`);
+    if (item.children.length) lines.push(renderBulletTreeLatex(item.children, depth + 1));
+  }
+  lines.push("\\end{itemize}");
+  return lines.join("\n");
+}
+
+function renderBulletsLatex(bullets) {
+  return renderBulletTreeLatex(buildBulletTree(bullets));
+}
+
 function renderEntry(entry) {
   const tags = entry.tags.map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
   const title = `${inline(entry.title)}${tags}`;
@@ -460,11 +495,7 @@ function renderEntry(entry) {
     parts.push(inline(paragraph));
   }
   if (entry.bullets.length) {
-    parts.push("\\begin{itemize}");
-    for (const bullet of entry.bullets) {
-      parts.push(`  \\item ${inline(bullet)}`);
-    }
-    parts.push("\\end{itemize}");
+    parts.push(renderBulletsLatex(entry.bullets));
   }
 
   return parts.join("\n\n");
@@ -473,15 +504,27 @@ function renderEntry(entry) {
 function renderSections(sections) {
   return sections
     .map((section) => {
-      const body = section.blocks
-        .map((block) => {
+      const parts = [];
+      for (let index = 0; index < section.blocks.length; index += 1) {
+        const block = section.blocks[index];
+        if (block.type === "bullet") {
+          const bullets = [];
+          while (index < section.blocks.length && section.blocks[index].type === "bullet") {
+            bullets.push(section.blocks[index]);
+            index += 1;
+          }
+          index -= 1;
+          parts.push(renderBulletsLatex(bullets));
+          continue;
+        }
+        parts.push((() => {
           if (block.type === "entry") return renderEntry(block);
-          if (block.type === "bullet") return `\\begin{itemize}\n  \\item ${inline(block.text)}\n\\end{itemize}`;
           if (block.type === "heading" && block.level === 1) return `\\omrHeadingOne{${inline(block.text)}}`;
           if (block.type === "heading" && block.level === 4) return `\\omrHeadingFour{${inline(block.text)}}`;
           return inline(block.text);
-        })
-        .join("\n\n");
+        })());
+      }
+      const body = parts.join("\n\n");
       return `\\sectioncard{${inline(section.title)}}\n${body}`;
     })
     .join("\n\n");
@@ -664,7 +707,7 @@ function renderEntryHtml(entry) {
   const fields = entry.fields.map((field) => `<div class="field"><strong>${inlineHtml(field.label)}：</strong>${inlineHtml(field.value)}</div>`).join("\n");
   const paragraphs = entry.paragraphs.map((paragraph) => `<p>${inlineHtml(paragraph)}</p>`).join("\n");
   const bullets = entry.bullets.length
-    ? `<ul>\n${entry.bullets.map((bullet) => `  <li>${inlineHtml(bullet)}</li>`).join("\n")}\n</ul>`
+    ? renderBulletsHtml(entry.bullets)
     : "";
   const leftBlock = entry.left ? `<left>${inlineHtml(entry.left)}</left>` : "";
   const center = entry.center
@@ -683,15 +726,39 @@ function renderEntryHtml(entry) {
 </article>`;
 }
 
+function renderBulletTreeHtml(items) {
+  if (!items.length) return "";
+  return `<ul>\n${items.map((item) => {
+    const children = item.children.length ? `\n${renderBulletTreeHtml(item.children)}` : "";
+    return `  <li>${inlineHtml(item.text)}${children}</li>`;
+  }).join("\n")}\n</ul>`;
+}
+
+function renderBulletsHtml(bullets) {
+  return renderBulletTreeHtml(buildBulletTree(bullets));
+}
+
 function renderSectionsHtml(sections, tokens) {
   return sections.map((section) => {
-    const body = section.blocks.map((block) => {
-      if (block.type === "entry") return renderEntryHtml(block);
-      if (block.type === "bullet") return `<ul><li>${inlineHtml(block.text)}</li></ul>`;
-      if (block.type === "heading" && block.level === 1) return `<h1>${inlineHtml(block.text)}</h1>`;
-      if (block.type === "heading" && block.level === 4) return `<h4>${inlineHtml(block.text)}</h4>`;
-      return `<p>${inlineHtml(block.text)}</p>`;
-    }).join("\n");
+    const parts = [];
+    for (let index = 0; index < section.blocks.length; index += 1) {
+      const block = section.blocks[index];
+      if (block.type === "bullet") {
+        const bullets = [];
+        while (index < section.blocks.length && section.blocks[index].type === "bullet") {
+          bullets.push(section.blocks[index]);
+          index += 1;
+        }
+        index -= 1;
+        parts.push(renderBulletsHtml(bullets));
+        continue;
+      }
+      parts.push(block.type === "entry" ? renderEntryHtml(block)
+        : block.type === "heading" && block.level === 1 ? `<h1>${inlineHtml(block.text)}</h1>`
+          : block.type === "heading" && block.level === 4 ? `<h4>${inlineHtml(block.text)}</h4>`
+            : `<p>${inlineHtml(block.text)}</p>`);
+    }
+    const body = parts.join("\n");
     return `<section class="section">
   <h2 class="sectionTitle section-${escapeHtml(tokens.options.sectionStyle)}"><span>${inlineHtml(section.title)}</span></h2>
   ${body}
@@ -749,8 +816,11 @@ function renderHtmlDocument(meta, sections, options = {}) {
     .entryCenter, .left, .field, p { margin: 0.12em 0; }
     .left { text-align: left; }
     .right { text-align: right; }
-    ul { margin: 0.16em 0 0.2em 1.15em; padding: 0; }
+    ul { margin: 0.16em 0 0.2em 1.15em; padding: 0; list-style-type: disc; }
+    ul ul { margin-top: 0.06em; margin-bottom: 0.08em; margin-left: 1.05em; list-style-type: disc; }
+    ul ul ul { margin-left: 0.95em; list-style-type: disc; }
     li { margin: 0.08em 0; }
+    li li { margin: 0.04em 0; }
     .tag { display: inline-flex; align-items: center; margin-left: 0.34em; padding: 0 0.34em; border-radius: 3px; background: ${tokens.colors.tagBg}; color: ${tokens.colors.accent}; font-size: 1em; line-height: 1.12; font-weight: 700; vertical-align: baseline; }
     @media screen { .page { box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18); } }
     @media print { body { background: white; } .page { width: auto; min-height: auto; margin: 0; padding: 0; box-shadow: none; } }
