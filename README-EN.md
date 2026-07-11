@@ -1,4 +1,8 @@
-#   <img src="assets/oh-my-resume-logo.png" width="60px" alt="Oh My Resume" />Oh My Resume
+<p align="center">
+  <img src="assets/oh-my-resume-logo.png" width="150px" alt="Oh My Resume" />
+</p>
+
+<h1 align="center">Oh My Resume</h1>
 
 > A Skill-first Markdown resume engine — making your career narrative as readable, editable, and traceable as code.
 

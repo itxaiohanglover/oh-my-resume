@@ -1,4 +1,9 @@
-#   <img src="assets/oh-my-resume-logo.png" width="60px" alt="Oh My Resume" />Oh My Resume
+<p align="center">
+  <img src="assets/oh-my-resume-logo.png" width="150px" alt="Oh My Resume" />
+</p>
+
+
+<h1 align="center">Oh My Resume</h1>
 
 >  一个 Skill-first 的 Markdown 简历引擎——让职业经历像代码一样可读、可改、可追踪。
 
