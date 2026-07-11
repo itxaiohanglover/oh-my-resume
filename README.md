@@ -247,6 +247,17 @@ sudo apt-get install latexmk texlive-xetex texlive-lang-chinese
 ```
 
 ---
+## Star History
+
+<a href="https://www.star-history.com/?repos=itxaiohanglover%2Foh-my-resume&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&theme=dark&legend=top-left&sealed_token=QUpmOEyjLFp7v444N185TLCpaGgZsxe1WmC3CkxtOT3DP0w6ZMBbEtmIVQbZbxi5FURf9KpTDOvCbU08Cc7Et1w_VYhsIhvJIXOxaLuiA6dFnvpwCwWo6A" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=QUpmOEyjLFp7v444N185TLCpaGgZsxe1WmC3CkxtOT3DP0w6ZMBbEtmIVQbZbxi5FURf9KpTDOvCbU08Cc7Et1w_VYhsIhvJIXOxaLuiA6dFnvpwCwWo6A" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=QUpmOEyjLFp7v444N185TLCpaGgZsxe1WmC3CkxtOT3DP0w6ZMBbEtmIVQbZbxi5FURf9KpTDOvCbU08Cc7Et1w_VYhsIhvJIXOxaLuiA6dFnvpwCwWo6A" />
+ </picture>
+</a>
+
+---
 ##  开源协议
 
 本项目采用 [MIT License](LICENSE) 开源许可证。
