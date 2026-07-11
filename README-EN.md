@@ -15,6 +15,10 @@
 
 ![Oh My Resume example](assets/example.png)
 
+Copy the prompt below to your Agent for one-click setup:
+
+> Clone and set up https://github.com/itxaiohanglover/oh-my-resume, then help me create my resume PDF.
+
 ⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
 🚀 [Quick start](#quick-start) ·
 📝 [Markdown Format](#markdown-format)
@@ -51,17 +55,18 @@ On this foundation, the **Agent acts as an intelligent collaborator**, participa
 
 This space already has many mature products, each solving different problems. Oh My Resume doesn't try to replicate an online resume builder — it takes a different path: **local, free, programmable, and deeply collaborable with AI Agents.**
 
-|          | [WonderCV](https://www.wondercv.com/) | [LaoYu Resume](https://www.laoyujianli.com/) | [OneResume](https://github.com/virantha/one_resume) | LaTeX Templates | **Oh My Resume** |
-| :------: | ------------------------------------- | ---------------------------------------- | --------------------------------------------------- | :------------: | ---------------- |
-| Core Positioning | Online resume builder | Online resume builder | Source-driven resume generation | Document typesetting | **Markdown Resume Engineering System** |
-| Content Source | Platform data | Platform forms | YAML data | TeX source | **Markdown files** |
-| Content Editing | Visual editor | Form-based | Data configuration | Manual authoring | **Markdown + Agent collaboration** |
-| Generation Pipeline | Edit → Export | Edit → Export | Data → Template → PDF | TeX → PDF | **Markdown → Skill → XeLaTeX → PDF** |
-| Version Control | Platform saves | Platform saves | File-based | Git optional | **Git-native** |
-| Content Iteration | Per-application | Quick edits | Template reuse | Typesetting tweaks | **Long-term maintenance** |
-| Style Control | Template selection | Template config | Template modification | TeX customization | **JSON-driven configuration** |
-| Data Ownership | Platform-managed | Platform-managed | Local files | Local files | **Local files, free to fork** |
-| AI Capability | Content generation | Copy optimization | No native AI | None | **Agent understands context and assists refinement** |
+| Capability | WonderCV | LaoYu Resume | OneResume | LaTeX Templates | **Oh My Resume** |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Native Markdown support | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Local file management | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Git version control | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Long-term iteration | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Config-driven styles | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Custom typesetting | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Automatic PDF generation | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No platform lock-in | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Context-aware optimization | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agent collaboration | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ##  Quick Start
 
@@ -246,6 +251,18 @@ brew install --cask mactex-no-gui
 ```bash
 sudo apt-get install latexmk texlive-xetex texlive-lang-chinese
 ```
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=itxaiohanglover%2Foh-my-resume&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&theme=dark&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+ </picture>
+</a>
 
 ---
 

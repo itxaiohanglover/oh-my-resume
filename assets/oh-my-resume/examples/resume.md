@@ -17,7 +17,7 @@ contacts:
 ## 实习经历
 
 ### 某云计算公司 <center>后端研发实习生 | 数据平台组 `Java` `可观测性`</center>"2025年06月 - 2025年09月"
-<center>技术栈：Java、Spring Boot、MySQL、Redis、Kafka、Prometheus</center>
+技术栈：Java、Spring Boot、MySQL、Redis、Kafka、Prometheus
 
 - <left>参与任务执行链路治理，梳理提交、调度、回调和告警 4 个核心阶段，补充链路追踪字段与异常归因标签。</left>
 - 重构批量状态同步接口，使用分页游标和幂等写入替代全量扫描，接口 P95 延迟由 860ms 降至 210ms。
@@ -26,7 +26,7 @@ contacts:
 ## 开源经历
 
 ### TaskFlow Lite <center>轻量级分布式任务调度器 `开源` `分布式` </center> "2025年01月 - 2025年08月"
-"技术栈：Java、Netty、gRPC、MySQL、Redis"
+技术栈：Java、Netty、gRPC、MySQL、Redis
 
 - 设计 Worker 注册、心跳续约和任务抢占机制，支持节点上下线后的任务自动迁移，降低人工恢复成本。
 - 基于时间轮实现延迟任务扫描，结合 Redis 去重锁和数据库状态机，避免重复触发与并发更新冲突。

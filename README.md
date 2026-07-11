@@ -16,6 +16,10 @@
 
 ![Oh My Resume example](assets/example.png)
 
+请将下方提示词复制给你的 Agent，实现一键安装与配置：
+
+> Clone and set up https://github.com/itxaiohanglover/oh-my-resume, then help me create my resume PDF.
+
 ⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
 🚀 [Quick start](#快速开始) ·
 📝 [Markdown Format](#markdown-格式)
@@ -52,17 +56,18 @@ Oh My Resume 围绕这三个核心理念构建：
 
 这个领域已有很多成熟产品，它们解决的问题不同。Oh My Resume 不试图复刻一个在线简历网站，而是选择另一条路线：**本地、自由、可编程、可被 Agent 深度协作。**
 
-|          | [超级简历](https://www.wondercv.com/) | [老鱼简历](https://www.laoyujianli.com/) | [OneResume](https://github.com/virantha/one_resume) | LaTeX 模板 | **Oh My Resume** |
-| :------: | ------------------------------------- | ---------------------------------------- | --------------------------------------------------- | :------------: | ---------------- |
-| 核心定位 | 在线简历制作 | 在线简历制作 | 源码驱动简历生成 | 文档排版系统 | **Markdown 简历工程系统** |
-| 内容源 | 平台数据 | 平台表单 | YAML 数据 | TeX 源码 | **Markdown 文件** |
-| 内容编辑 | 可视化编辑 | 表单填写 | 数据配置 | 手动编写 | **Markdown + Agent 协作** |
-| 生成流程 | 编辑 → 导出 | 编辑 → 导出 | 数据 → 模板 → PDF | TeX → PDF | **Markdown → Skill → XeLaTeX → PDF** |
-| 版本管理 | 平台保存 | 平台保存 | 文件管理 | Git 可选 | **Git 原生支持** |
-| 内容迭代 | 面向单次求职 | 面向快速修改 | 面向模板复用 | 面向排版优化 | **面向长期维护** |
-| 样式控制 | 模板选择 | 模板配置 | 模板修改 | TeX 定制 | **JSON 配置驱动** |
-| 数据归属 | 平台管理 | 平台管理 | 本地文件 | 本地文件 | **本地文件，可自由 Fork** |
-| AI 能力 | 内容生成 | 文案优化 | 无原生 AI | 无 | **Agent 理解上下文并协助优化** |
+| 能力 | 超级简历 | 老鱼简历 | OneResume | LaTeX 模板 | **Oh My Resume** |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Markdown 原生支持 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 本地文件管理 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Git 版本管理 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 长期维护迭代 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 配置驱动样式 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 自定义排版控制 | ❌ | ❌ | ❌ | ✅ | ✅ |
+| 自动生成 PDF | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 无平台锁定 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 上下文理解优化 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agent 协作 | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ##  快速开始
 
