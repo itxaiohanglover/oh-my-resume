@@ -3,16 +3,17 @@
 > A Skill-first Markdown resume engine — making your career narrative as readable, editable, and traceable as code.
 
 <p align="center">
-  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a><!--
-  --><a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a><!--
-  --><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a><!--
-  --><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>&nbsp;
+  <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>&nbsp;
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
 </p>
+
 ![Oh My Resume example](assets/example.png)
 
 ⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
-🚀 [Quick start](#-quick-start) ·
-📝 [Markdown Format](#-markdown-format)
+🚀 [Quick start](#quick-start) ·
+📝 [Markdown Format](#markdown-format)
 
 ---
 

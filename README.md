@@ -3,16 +3,17 @@
 >  一个 Skill-first 的 Markdown 简历引擎——让职业经历像代码一样可读、可改、可追踪。
 
 <p align="center">
-  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a><!--
-  --><a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a><!--
-  --><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a><!--
-  --><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>&nbsp;
+  <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>&nbsp;
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
 </p>
+
 ![Oh My Resume example](assets/example.png)
 
 ⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
 🚀 [Quick start](#快速开始) ·
-📝 [Markdown Format](#Markdown 格式) 
+📝 [Markdown Format](#markdown-格式)
 
 ---
 一份真正有价值的简历，不是一张一次生成的 PDF。它是一份持续演进的职业记录，承载着个人经历、判断、选择与成长。
