@@ -20,10 +20,6 @@
 
 > Clone and set up https://github.com/itxaiohanglover/oh-my-resume, then help me create my resume PDF.
 
-⭐ [Star on GitHub](https://github.com/itxaiohanglover/oh-my-resume) ·
-🚀 [Quick start](#快速开始) ·
-📝 [Markdown Format](#markdown-格式)
-
 ---
 一份真正有价值的简历，不是一张一次生成的 PDF。它是一份持续演进的职业记录，承载着个人经历、判断、选择与成长。
 
