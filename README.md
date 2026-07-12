@@ -18,7 +18,7 @@
 
 请将下方提示词复制给你的 Agent，实现一键安装与配置：
 
-> Clone and set up https://github.com/itxaiohanglover/oh-my-resume, then help me create my resume PDF.
+> Clone and set up https://github.com/open-agent-power/oh-my-resume, then help me create my resume PDF.
 
 ---
 一份真正有价值的简历，不是一张一次生成的 PDF。它是一份持续演进的职业记录，承载着个人经历、判断、选择与成长。
