@@ -6,7 +6,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const cli = require("./cli");
-const { buildHtmlResume, parseMarkdown, renderHtmlDocument } = require("./build");
+const { buildHtmlResume, buildResume, parseMarkdown, renderHtmlDocument } = require("./build");
 
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -106,6 +106,15 @@ async function testDebugServerSurvivesLongRender() {
 
   try {
     await waitForServer(`http://127.0.0.1:${port}/api/state`);
+    const page = await requestJson(`http://127.0.0.1:${port}/`);
+    assert.strictEqual(page.statusCode, 200);
+    assert.strictEqual((page.body.match(/class="logoChip builtinLogoChip"/g) || []).length, 19);
+    assert.match(page.body, /data-logo-id="china-mobile"/);
+    assert.match(page.body, /data-logo-id="tongyi-lab"/);
+    assert.match(page.body, /data-logo-id="deepseek"/);
+    assert.match(page.body, /builtin-logo\/alibaba\?v=FF6A00/);
+    const builtInLogo = await requestJson(`http://127.0.0.1:${port}/builtin-logo/china-mobile?v=0086D0%2C8EC320`);
+    assert.strictEqual(builtInLogo.statusCode, 200);
     await requestJson(`http://127.0.0.1:${port}/api/ping`, { method: "POST" });
     const render = await requestJson(`http://127.0.0.1:${port}/api/render`, {
       method: "POST",
@@ -209,6 +218,64 @@ async function testNestedBulletsPreserveMarkdownIndentation() {
   assert.match(html, /<li>Third level<\/li>/);
 }
 
+async function testInlineLogosRenderBuiltInAndCustomAssets() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-logo-test-"));
+  fs.writeFileSync(path.join(tempDir, "company.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  fs.writeFileSync(path.join(tempDir, "resume.md"), [
+    "---",
+    "name: Logo User",
+    "---",
+    "",
+    "## Experience",
+    "",
+    "### <logo>alibaba</logo> Alibaba <right>2026</right>",
+    "",
+    "- Built <logo>my-company</logo> platform.",
+    "- Worked with <logo>china-mobile</logo> China Mobile.",
+    "- AI brands: <logo>tongyi-lab</logo> <logo>pinduoduo</logo> <logo>xiaohongshu</logo> <logo>tencent</logo> <logo>kimi</logo> <logo>deepseek</logo>.",
+    "- Direct asset: <logo src=\"company.png\">Direct Company</logo>."
+  ].join("\n"));
+  fs.writeFileSync(path.join(tempDir, "omr.config.json"), JSON.stringify({
+    logos: { "my-company": "company.png" },
+    theme: { lengths: { omrInlineLogoHeight: "1.1em" } }
+  }));
+
+  const htmlResult = buildHtmlResume({
+    cwd: tempDir,
+    input: "resume.md",
+    output: "build/resume.html",
+    config: "omr.config.json"
+  });
+  const html = fs.readFileSync(htmlResult.output, "utf8");
+  assert.match(html, /class="inlineLogo"/);
+  assert.match(html, /alt="阿里巴巴"/);
+  assert.match(html, /alt="Direct Company"/);
+  assert.match(html, /alt="中国移动"/);
+  assert.match(html, /alt="通义实验室"/);
+  assert.match(html, /alt="DeepSeek"/);
+  assert.match(html, /height: 1\.1em/);
+  assert.match(html, /data:image\/png;base64/);
+
+  const texResult = buildResume({
+    cwd: tempDir,
+    input: "resume.md",
+    output: "build/resume.tex",
+    config: "omr.config.json"
+  });
+  const tex = fs.readFileSync(texResult.output, "utf8");
+  assert.match(tex, /\\omrInlineLogo\{/);
+  assert.match(tex, /alibaba\.png/);
+  assert.match(tex, /company\.png/);
+  assert.match(tex, /china-mobile\.png/);
+  assert.match(tex, /tongyi-lab\.png/);
+  assert.match(tex, /pinduoduo\.png/);
+  assert.match(tex, /xiaohongshu\.png/);
+  assert.match(tex, /tencent\.png/);
+  assert.match(tex, /kimi\.png/);
+  assert.match(tex, /deepseek\.png/);
+  assert.match(tex, /\\renewcommand\{\\omrInlineLogoHeight\}\{1\.1em\}/);
+}
+
 async function testHtmlPdfBrowserCanUseExplicitPath() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-browser-test-"));
   const browser = path.join(tempDir, process.platform === "win32" ? "chrome.cmd" : "chrome");
@@ -223,6 +290,7 @@ async function main() {
   await testLocalPresetsOnlyListCurrentDirectoryJson();
   await testHtmlRendererBuildsStandalonePreview();
   await testNestedBulletsPreserveMarkdownIndentation();
+  await testInlineLogosRenderBuiltInAndCustomAssets();
   await testHtmlPdfBrowserCanUseExplicitPath();
 }
 

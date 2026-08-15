@@ -48,6 +48,7 @@
 \newcommand{\omrPhotoWidth}{2.35cm}
 \newcommand{\omrPhotoHeight}{2.75cm}
 \newcommand{\omrLogoHeight}{1.2cm}
+\newcommand{\omrInlineLogoHeight}{1em}
 \newlength{\omrSavedLineWidth}
 \newcommand{\omrHeaderGap}{7mm}
 \newcommand{\omrPhotoRightInset}{0mm}

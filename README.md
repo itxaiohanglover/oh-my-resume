@@ -128,20 +128,47 @@ Oh My Resume 使用 Markdown 作为唯一事实源。
 ```md
 ### 项目名称`标签` <right>2025年01月 - 2025年08月</right>
 
-- 项目描述
-  - 技术细节
-    - 量化结果
+- <logo>alibaba</logo> 一级要点
+  - 二级补充
+    - 三级细节
 ```
 
 支持：
 
-- `##` 表示简历模块
-- `###` 表示经历条目
-- `` `标签` `` 渲染Tag
-- 自定义标签渲染文字对齐方式
-- `-`多级列表自动映射
-- `**重点**` 渲染粗体强调
-- `[文本](链接)` 会保留为可点击链接
+- `##` 表示简历模块。
+- `###` 表示经历条目。
+- `` `标签` `` 会渲染为 Tag。
+- `<right>...</right>` 会渲染为右侧时间。
+- `-`、`  -`、`    -` 会分别渲染为一级、二级、三级列表。
+- `**重点**` 会加粗。
+- `[文本](链接)` 会保留为可点击链接。
+- `<logo>alibaba</logo>` 会渲染为与文字基线对齐的企业 Logo。
+
+内置 key：`alibaba`、`alibaba-cloud`、`bytedance`、`baidu`、`huawei`、
+`meituan`、`xiaomi`、`kuaishou`、`alipay`、`taobao`、`apple`、`google`。
+另支持中国移动：`china-mobile`。
+
+AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
+`tencent`、`kimi`、`deepseek`。
+
+自定义图片可直接写入 Markdown（PNG/JPG）：
+
+```md
+<logo src="logos/my-company.png">My Company</logo>
+```
+
+需要多次使用时，可以在 `omr.config.json` 注册短名称：
+
+```json
+{
+  "logos": {
+    "my-company": "logos/my-company.png"
+  }
+}
+```
+
+之后使用 `<logo>my-company</logo>`。图片路径相对于简历 Markdown 文件。
+
 ---
 ##  配置系统
 
@@ -163,6 +190,7 @@ Oh My Resume 使用 Markdown 作为唯一事实源。
       "omrPageMarginLeft": "8mm",
       "omrPhotoWidth": "2.35cm",
       "omrPhotoHeight": "2.75cm",
+      "omrInlineLogoHeight": "1em",
       "omrHeaderNameGap": "0.41em",
       "omrSectionAfter": "0.54em"
     },
@@ -176,6 +204,9 @@ Oh My Resume 使用 Markdown 作为唯一事实源。
       "omrSectionFontSize": "12.1pt",
       "omrEntryFontSize": "10.5pt"
     }
+  },
+  "logos": {
+    "my-company": "logos/my-company.png"
   }
 }
 ```
@@ -211,7 +242,7 @@ Debug 页面的「样式设置 -> 模板」只读取当前目录的本地模板�
 omr.styles/current-comfort.json
 ```
 
-也可以点击「打开文件夹」选择包含 JSON 配置的文件夹，页面会读取其中的配置并应用。应用模板只会合并 `theme` 和 `markdown` 配置，不会修改 Markdown 正文、输入路径或输出路径。
+也可以点击「打开文件夹」选择包含 JSON 配置的文件夹，页面会读取其中的配置并应用。应用模板会合并 `theme`、`markdown` 和 `logos` 配置，不会修改 Markdown 正文、输入路径或输出路径。
 
 ---
 

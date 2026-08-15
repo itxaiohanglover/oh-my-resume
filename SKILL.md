@@ -77,6 +77,33 @@ Supported Markdown:
     - Level 3
 ```
 - `**bold**`, `` `tag` ``, and Markdown links
+- inline company logos with `<logo>alibaba</logo>`
+
+Built-in logo keys are `alibaba`, `alibaba-cloud`, `bytedance`, `baidu`,
+`huawei`, `meituan`, `xiaomi`, `kuaishou`, `alipay`, `taobao`, `apple`, and
+`google`, `china-mobile`, `tongyi-lab`, `pinduoduo`, `xiaohongshu`, `tencent`,
+`kimi`, and `deepseek`. Debug mode lists these at the bottom of Style Settings; selecting one
+inserts its tag at the Markdown cursor.
+
+For a local PNG or JPG, either reference it directly:
+
+```md
+<logo src="logos/my-company.png">My Company</logo>
+```
+
+Or register a reusable key in `omr.config.json` and use the same short syntax:
+
+```json
+{
+  "logos": {
+    "my-company": "logos/my-company.png"
+  }
+}
+```
+
+```md
+<logo>my-company</logo>
+```
 
 4. Generate the PDF by passing the Markdown file:
 
@@ -117,7 +144,7 @@ node <skill-dir>/assets/oh-my-resume/scripts/cli.js debug resume.md
 
 This opens a local browser page with Markdown editing on the left and preview on the right. The user can choose `LaTeX PDF` or `HTML 快速预览`, then click render to save Markdown and regenerate the selected output. The `HTML 导出 PDF` button generates the browser-rendered fallback PDF. The debug session stays running until the terminal process is stopped.
 
-The debug page also includes `Style` and source export controls. Use `Style` when the user wants to tune fonts, heading sizes, body size, tag colors, section colors, page margins, photo width/height, header gap, or date/tag field names. The button writes standard `omr.config.json`; users may also edit that JSON directly. Local templates are read from `omr.styles/*.json`; no built-in style preset is shown in the template picker.
+The debug page also includes `Style` and source export controls. Use `Style` when the user wants to tune fonts, heading sizes, body size, tag colors, section colors, page margins, photo width/height, inline logo height, header gap, or date/tag field names. The bottom of Style Settings lists built-in logos and local logo mappings. The button writes standard `omr.config.json`; users may also edit that JSON directly. Local templates are read from `omr.styles/*.json`; no built-in style preset is shown in the template picker.
 
 Use the advanced `watch` command only when the user explicitly asks for terminal-based file watching.
 

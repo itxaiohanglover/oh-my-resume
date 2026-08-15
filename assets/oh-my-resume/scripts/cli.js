@@ -6,7 +6,7 @@ const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const { pathToFileURL, URL } = require("url");
-const { buildHtmlResume, buildResume } = require("./build");
+const { buildHtmlResume, buildResume, readBuiltInLogos } = require("./build");
 
 const packageRoot = path.resolve(__dirname, "..");
 const builtInStylePresets = {
@@ -303,7 +303,8 @@ function readStylePreset(cwd, presetId, presetPath, presetConfig) {
 function mergeStylePreset(current, presetConfig) {
   return deepMerge(current || {}, {
     theme: presetConfig.theme || {},
-    markdown: presetConfig.markdown || {}
+    markdown: presetConfig.markdown || {},
+    logos: presetConfig.logos || {}
   });
 }
 
@@ -518,6 +519,12 @@ function debugCommand(args) {
   const pdfPath = path.resolve(cwd, args.pdf || config.pdf || defaultPdfOutput(input));
   const htmlPath = path.resolve(cwd, config.html || defaultHtmlOutput(input));
   const htmlPdfPath = path.resolve(cwd, config.htmlPdf || defaultHtmlPdfOutput(input));
+  const builtInLogos = readBuiltInLogos(packageRoot).map((item) => ({
+    id: item.id,
+    label: item.label,
+    color: item.color || "brand",
+    url: `/builtin-logo/${encodeURIComponent(item.id)}?v=${encodeURIComponent(item.color || "brand")}`
+  }));
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`Markdown file not found: ${input}`);
@@ -527,13 +534,26 @@ function debugCommand(args) {
     const requestUrl = new URL(req.url, "http://127.0.0.1");
 
     if (req.method === "GET" && requestUrl.pathname === "/") {
-      send(res, 200, debugHtml(path.basename(inputPath)));
+      send(res, 200, debugHtml(path.basename(inputPath), builtInLogos));
       return;
     }
 
     if (req.method === "GET" && requestUrl.pathname === "/favicon.ico") {
       res.writeHead(204, { "Cache-Control": "no-store" });
       res.end();
+      return;
+    }
+
+    if (req.method === "GET" && requestUrl.pathname.startsWith("/builtin-logo/")) {
+      const id = decodeURIComponent(requestUrl.pathname.slice("/builtin-logo/".length));
+      const item = readBuiltInLogos(packageRoot).find((logo) => logo.id === id);
+      if (!item) {
+        send(res, 404, "Logo not found", "text/plain; charset=utf-8");
+        return;
+      }
+      const file = path.join(packageRoot, "src", "logos", item.file);
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
+      fs.createReadStream(file).pipe(res);
       return;
     }
 
@@ -547,7 +567,8 @@ function debugCommand(args) {
         pdfUrl: fs.existsSync(pdfPath) ? `/pdf?ts=${Date.now()}` : null,
         htmlUrl: fs.existsSync(htmlPath) ? `/html?ts=${Date.now()}` : null,
         htmlPdf: path.relative(cwd, htmlPdfPath),
-        engine: config.engine || "latex"
+        engine: config.engine || "latex",
+        builtInLogos
       });
       return;
     }
@@ -771,6 +792,7 @@ omrLinkColor: "37,99,235",
         omrEntryDateWidth: "39mm",
         omrPhotoRightInset: "0mm",
         omrLogoHeight: "1.2cm",
+        omrInlineLogoHeight: "1em",
         ...(theme.lengths || {})
       },
       fonts: {
@@ -805,7 +827,8 @@ omrLinkColor: "37,99,235",
       rightOpen: "<right>",
       rightClose: "</right>",
       ...(config.markdown || {})
-    }
+    },
+    logos: { ...(config.logos || {}) }
   };
 }
 
@@ -831,8 +854,21 @@ function mergeDebugConfig(current, incoming) {
       leftClose: cleanTag(normalized.markdown.leftClose),
       rightOpen: cleanTag(normalized.markdown.rightOpen),
       rightClose: cleanTag(normalized.markdown.rightClose)
-    }
+    },
+    logos: cleanLogoMap(normalized.logos)
   };
+}
+
+function cleanLogoMap(value) {
+  const result = {};
+  for (const [key, file] of Object.entries(value || {})) {
+    const normalized = String(key).trim().toLowerCase();
+    const source = String(file).trim();
+    if (/^[a-z0-9][a-z0-9-]*$/.test(normalized) && source && !source.includes("\0")) {
+      result[normalized] = source;
+    }
+  }
+  return result;
 }
 
 function cleanObject(value, predicate) {
@@ -936,7 +972,11 @@ function openBrowser(url) {
   child.unref();
 }
 
-function debugHtml(fileName) {
+function debugHtml(fileName, builtInLogos = []) {
+  const builtInLogoButtons = builtInLogos.map((logo) => `
+            <button class="logoChip builtinLogoChip" type="button" data-logo-id="${escapeHtml(logo.id)}" title="&lt;logo&gt;${escapeHtml(logo.id)}&lt;/logo&gt;">
+              <img src="${escapeHtml(logo.url)}" alt=""><span>${escapeHtml(logo.label)}</span>
+            </button>`).join("");
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -1191,6 +1231,36 @@ function debugHtml(fileName) {
       gap: 8px;
       flex-wrap: wrap;
     }
+    .logoLibrary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .logoPresetGroup {
+      display: grid;
+      gap: 7px;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    .logoChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .logoChip:hover { border-color: var(--accent); background: #f8fbff; }
+    .logoChip img { width: 23px; height: 23px; padding: 2px; border-radius: 4px; background: #eef1f5; object-fit: contain; }
+    .logoRemove { width: 26px; min-height: 30px; padding: 0; font-size: 16px; }
     .dialogActions {
       display: flex;
       justify-content: flex-end;
@@ -1319,7 +1389,21 @@ function debugHtml(fileName) {
             <span class="menuItem"><span class="menuIcon">照片右侧缩进（mm）</span><input id="quickPhotoInset" placeholder="0"></span>
             <span class="menuItem"><span class="menuIcon">个人照片高度（cm）</span><input id="quickPhoto" placeholder="2.75"></span>
             <span class="menuItem"><span class="menuIcon">学校logo高度（cm）</span><input id="quickLogo" placeholder="1.2"></span>
+            <span class="menuItem"><span class="menuIcon">行内logo高度（em）</span><input id="quickInlineLogo" placeholder="1"></span>
           </div>
+        </section>
+        <section class="settingsSection">
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v10H4z"/><path d="M8 7V4h8v3M8 17v3h8v-3"/></svg>企业 Logo</p>
+          <div class="logoPresetGroup">
+            <div class="logoLibrary" id="builtinLogoList">${builtInLogoButtons}
+            </div>
+          </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">自定义 key</span><input id="customLogoKey" placeholder="my-company" style="width:110px;"></span>
+            <span class="menuItem"><span class="menuIcon">图片路径</span><input id="customLogoPath" placeholder="logos/company.png" style="width:190px;"></span>
+            <button class="ghost" id="addCustomLogo" type="button">添加</button>
+          </div>
+          <div class="logoLibrary" id="customLogoList"></div>
         </section>
       </div>
     </div>
@@ -1365,6 +1449,7 @@ function debugHtml(fileName) {
     const quickMarginRight = document.getElementById("quickMarginRight");
     const quickPhoto = document.getElementById("quickPhoto");
     const quickLogo = document.getElementById("quickLogo");
+    const quickInlineLogo = document.getElementById("quickInlineLogo");
     const quickPhotoInset = document.getElementById("quickPhotoInset");
     const quickHeaderAlign = document.getElementById("quickHeaderAlign");
     const quickSectionStyle = document.getElementById("quickSectionStyle");
@@ -1377,6 +1462,11 @@ function debugHtml(fileName) {
     const alignTypeSelect = document.getElementById("alignTypeSelect");
     const alignOpen = document.getElementById("alignOpen");
     const alignClose = document.getElementById("alignClose");
+    const builtinLogoList = document.getElementById("builtinLogoList");
+    const customLogoList = document.getElementById("customLogoList");
+    const customLogoKey = document.getElementById("customLogoKey");
+    const customLogoPath = document.getElementById("customLogoPath");
+    const addCustomLogo = document.getElementById("addCustomLogo");
     let currentConfig = null;
     let currentConfigPath = "omr.config.json";
     let uploadedPresetConfig = null;
@@ -1450,6 +1540,7 @@ function debugHtml(fileName) {
       currentConfigPath = state.configPath || "omr.config.json";
       renderCategoryFields();
       renderQuickControls();
+      renderLogoLibrary();
       captureAlignTags();
       await renderPresetControls();
       paths.textContent = state.input + " -> " + state.pdf;
@@ -1611,6 +1702,7 @@ function debugHtml(fileName) {
       renderAlignControls();
       quickPhoto.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoHeight"));
       quickLogo.value = extractNumber(getPath(currentConfig, "theme.lengths.omrLogoHeight"));
+      quickInlineLogo.value = extractNumber(getPath(currentConfig, "theme.lengths.omrInlineLogoHeight"));
       quickPhotoInset.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoRightInset"));
       quickTagBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagBg"));
       quickTagText.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagText"));
@@ -1684,6 +1776,44 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       cursor[key] = isList ? value.split(/[,，]/).map((item) => item.trim()).filter(Boolean) : value.trim();
     }
 
+    function insertAtCursor(value) {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.setRangeText(value, start, end, "end");
+      editor.focus();
+    }
+
+    function renderLogoLibrary() {
+      for (const button of builtinLogoList.querySelectorAll(".builtinLogoChip")) {
+        if (button.dataset.bound === "true") continue;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => {
+          insertAtCursor("<logo>" + button.dataset.logoId + "</logo>");
+        });
+      }
+
+      customLogoList.innerHTML = "";
+      for (const [key, file] of Object.entries(currentConfig.logos || {})) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "logoChip";
+        button.textContent = key;
+        button.title = file;
+        button.addEventListener("click", () => insertAtCursor("<logo>" + key + "</logo>"));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "logoChip logoRemove";
+        remove.textContent = "×";
+        remove.title = "删除 " + key;
+        remove.addEventListener("click", () => {
+          delete currentConfig.logos[key];
+          renderLogoLibrary();
+          saveConfigToServer();
+        });
+        customLogoList.append(button, remove);
+      }
+    }
+
     function collectStyleConfig() {
       const config = { theme: { colors: {}, lengths: {}, fonts: {}, sizes: {} }, markdown: {} };
       for (const grid of document.querySelectorAll(".categoryGrid")) {
@@ -1722,6 +1852,7 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       setPath(currentConfig, "theme.lengths.omrPageMarginRight", quickMarginRight.value + "mm");
       setPath(currentConfig, "theme.lengths.omrPhotoHeight", quickPhoto.value + "cm");
       setPath(currentConfig, "theme.lengths.omrLogoHeight", quickLogo.value + "cm");
+      setPath(currentConfig, "theme.lengths.omrInlineLogoHeight", quickInlineLogo.value + "em");
       setPath(currentConfig, "theme.lengths.omrPhotoRightInset", quickPhotoInset.value + "mm");
       renderCategoryFields();
       saveConfigToServer();
@@ -1901,7 +2032,23 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     });
     quickPhoto.addEventListener("input", applyQuickConfig);
     quickLogo.addEventListener("input", applyQuickConfig);
+    quickInlineLogo.addEventListener("input", applyQuickConfig);
     quickPhotoInset.addEventListener("input", applyQuickConfig);
+    addCustomLogo.addEventListener("click", () => {
+      const key = customLogoKey.value.trim().toLowerCase();
+      const file = customLogoPath.value.trim();
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(key) || !file) {
+        message.className = "error";
+        message.textContent = "Logo key 仅支持小写字母、数字和连字符，且图片路径不能为空";
+        return;
+      }
+      currentConfig.logos = currentConfig.logos || {};
+      currentConfig.logos[key] = file;
+      customLogoKey.value = "";
+      customLogoPath.value = "";
+      renderLogoLibrary();
+      saveConfigToServer();
+    });
     saveStyle.addEventListener("click", saveStyleConfig);
     let saveTimer = null;
     function saveConfigToServer() {
