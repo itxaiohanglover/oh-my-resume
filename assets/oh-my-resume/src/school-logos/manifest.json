@@ -1,0 +1,6 @@
+[
+  { "id": "uestc", "label": "电子科技大学", "file": "uestc.png" },
+  { "id": "peking-university", "label": "北京大学", "file": "peking-university.png" },
+  { "id": "southeast-university", "label": "东南大学", "file": "southeast-university.png" },
+  { "id": "northwestern-polytechnical-university", "label": "西北工业大学", "file": "northwestern-polytechnical-university.png" }
+]

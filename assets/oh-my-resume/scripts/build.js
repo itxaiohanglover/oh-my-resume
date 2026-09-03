@@ -5,6 +5,7 @@ const path = require("path");
 
 const packageRoot = path.resolve(__dirname, "..");
 const builtInLogoCache = new Map();
+const builtInSchoolLogoCache = new Map();
 
 let inlineLogoContext = {
   mode: "latex",
@@ -19,6 +20,52 @@ function readBuiltInLogos(packageDir = packageRoot) {
   const logos = JSON.parse(fs.readFileSync(manifest, "utf8"));
   builtInLogoCache.set(packageDir, logos);
   return logos;
+}
+
+function readBuiltInSchoolLogos(packageDir = packageRoot) {
+  if (builtInSchoolLogoCache.has(packageDir)) return builtInSchoolLogoCache.get(packageDir);
+  const manifest = path.join(packageDir, "src", "school-logos", "manifest.json");
+  const logos = JSON.parse(fs.readFileSync(manifest, "utf8"));
+  builtInSchoolLogoCache.set(packageDir, logos);
+  return logos;
+}
+
+function parseSchoolLogoValue(value) {
+  const raw = String(value || "").trim();
+  const tag = raw.match(/^<school-logo(?:\s+src=(?:"([^"]+)"|'([^']+)'))?\s*>([^<]+)<\/school-logo>$/i);
+  return tag
+    ? { source: tag[1] || tag[2] || "", key: tag[3].trim() }
+    : { source: "", key: raw };
+}
+
+function resolveSchoolLogo(value, options = {}) {
+  const parsed = parseSchoolLogoValue(value);
+  if (!parsed.key && !parsed.source) return { file: "", label: "" };
+
+  const packageDir = options.packageRoot || packageRoot;
+  const baseDir = path.dirname(options.input || options.cwd || process.cwd());
+  const normalizedKey = normalizeLogoKey(parsed.key);
+  const custom = options.custom && typeof options.custom === "object" ? options.custom : {};
+  const builtIn = readBuiltInSchoolLogos(packageDir).find((item) => item.id === normalizedKey);
+  let file = "";
+  let label = parsed.key || "School logo";
+
+  if (parsed.source) {
+    file = path.resolve(baseDir, parsed.source);
+  } else if (builtIn) {
+    file = path.join(packageDir, "src", "school-logos", builtIn.file);
+    label = builtIn.label;
+  } else if (custom[normalizedKey]) {
+    file = path.resolve(baseDir, String(custom[normalizedKey]));
+  } else {
+    file = path.resolve(baseDir, parsed.key);
+  }
+
+  if (!fs.existsSync(file)) throw new Error(`School logo file not found: ${file}`);
+  if (!/\.(png|jpe?g)$/i.test(file)) {
+    throw new Error(`School logos must use PNG or JPG: ${file}`);
+  }
+  return { file, label };
 }
 
 function setInlineLogoContext(options = {}) {
@@ -686,8 +733,13 @@ function renderDocument(meta, sections, options = {}) {
   const overrides = renderOverrides(options.themeOverrides);
   const avatarValue = Array.isArray(meta.avatar) ? "" : meta.avatar;
   const avatar = avatarValue ? path.resolve(path.dirname(options.input || cwd), avatarValue) : "";
-  const logoValue = meta.logo || "";
-  const logo = logoValue ? path.resolve(path.dirname(options.input || cwd), logoValue) : "";
+  const logoValue = meta.schoolLogo || meta["school-logo"] || meta.logo || "";
+  const logo = resolveSchoolLogo(logoValue, {
+    cwd,
+    input: options.input || cwd,
+    packageRoot: packageDir,
+    custom: options.schoolLogos || {}
+  }).file;
   const componentsDir = path.join(packageDir, "src", "components");
   setInlineLogoContext({
     mode: "latex",
@@ -890,7 +942,7 @@ function renderHtmlDocument(meta, sections, options = {}) {
   const config = options.config || {};
   const tokens = htmlStyleTokens(config);
   const avatarValue = Array.isArray(meta.avatar) ? "" : meta.avatar;
-  const logoValue = meta.logo || "";
+  const logoValue = meta.schoolLogo || meta["school-logo"] || meta.logo || "";
   const baseDir = path.dirname(options.input || options.cwd || process.cwd());
   setInlineLogoContext({
     mode: "html",
@@ -899,7 +951,13 @@ function renderHtmlDocument(meta, sections, options = {}) {
     custom: options.logos || config.logos || {}
   });
   const avatar = fileDataUri(avatarValue ? path.resolve(baseDir, avatarValue) : "");
-  const logo = fileDataUri(logoValue ? path.resolve(baseDir, logoValue) : "");
+  const schoolLogo = resolveSchoolLogo(logoValue, {
+    cwd: options.cwd,
+    input: options.input || options.cwd || process.cwd(),
+    packageRoot: options.packageRoot || packageRoot,
+    custom: options.schoolLogos || config.schoolLogos || {}
+  });
+  const logo = fileDataUri(schoolLogo.file);
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -983,7 +1041,13 @@ function buildHtmlResume(options = {}) {
   const [frontmatter, markdown] = parseFrontmatter(source);
   const meta = { ...(config.resume || {}), ...frontmatter };
   const sections = parseMarkdown(markdown, mdOpts);
-  const html = renderHtmlDocument(meta, sections, { config, cwd, input, logos: config.logos || {} });
+  const html = renderHtmlDocument(meta, sections, {
+    config,
+    cwd,
+    input,
+    logos: config.logos || {},
+    schoolLogos: config.schoolLogos || {}
+  });
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, html, "utf8");
   return { input, output };
@@ -1011,7 +1075,8 @@ function buildResume(options = {}) {
     input,
     packageRoot: options.packageRoot || packageRoot,
     themeOverrides: config.theme || {},
-    logos: config.logos || {}
+    logos: config.logos || {},
+    schoolLogos: config.schoolLogos || {}
   });
 
   fs.mkdirSync(path.dirname(output), { recursive: true });
@@ -1041,5 +1106,7 @@ module.exports = {
   parseMarkdown,
   renderDocument,
   renderHtmlDocument,
-  readBuiltInLogos
+  readBuiltInLogos,
+  readBuiltInSchoolLogos,
+  resolveSchoolLogo
 };

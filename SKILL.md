@@ -79,6 +79,7 @@ Supported Markdown:
 - `**bold**`, `` `tag` ``, and Markdown links
 - `***` on its own line renders a gray divider between content blocks
 - inline company logos with `<logo>alibaba</logo>`
+- header school logos through the `schoolLogo` frontmatter field
 
 Built-in logo keys are `alibaba`, `alibaba-cloud`, `bytedance`, `baidu`,
 `huawei`, `meituan`, `xiaomi`, `kuaishou`, `alipay`, `taobao`, `apple`,
@@ -105,6 +106,21 @@ Or register a reusable key in `omr.config.json` and use the same short syntax:
 ```md
 <logo>my-company</logo>
 ```
+
+Header school logos accept a built-in tag, a registered key, or a direct path:
+
+```yaml
+schoolLogo: <school-logo>uestc</school-logo>
+```
+
+```yaml
+schoolLogo: logos/my-school.png
+```
+
+Built-in school keys are `uestc`, `peking-university`, `southeast-university`,
+and `northwestern-polytechnical-university`. Register reusable custom keys in
+the top-level `schoolLogos` object. The legacy `logo: logo.png` field remains
+supported.
 
 4. Generate the PDF by passing the Markdown file:
 
@@ -145,7 +161,11 @@ node <skill-dir>/assets/oh-my-resume/scripts/cli.js debug resume.md
 
 This opens a local browser page with Markdown editing on the left and preview on the right. The user can choose `LaTeX PDF` or `HTML 快速预览`, then click render to save Markdown and regenerate the selected output. The `HTML 导出 PDF` button generates the browser-rendered fallback PDF. The debug session stays running until the terminal process is stopped.
 
-The debug page also includes `Style` and source export controls. Use `Style` when the user wants to tune fonts, heading sizes, body size, tag colors, section colors, page margins, photo width/height, inline logo height, header gap, or date/tag field names. The bottom of Style Settings lists built-in logos and local logo mappings. The button writes standard `omr.config.json`; users may also edit that JSON directly. Local templates are read from `omr.styles/*.json`; no built-in style preset is shown in the template picker.
+The debug page also includes `Style` and source export controls. Use `Style` when the user wants to tune fonts, heading sizes, body size, tag colors, section colors, page margins, photo width/height, inline logo height, header gap, or date/tag field names. The bottom of Style Settings lists built-in logos and local logo mappings. The button writes standard `omr.config.json`; users may also edit that JSON directly.
+
+Style Settings can export the current configuration as one `omr.config.json`
+file. "Import and replace" atomically replaces the active configuration in the
+current resume folder.
 
 Use the advanced `watch` command only when the user explicitly asks for terminal-based file watching.
 

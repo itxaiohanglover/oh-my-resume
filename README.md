@@ -170,12 +170,30 @@ AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
 
 之后使用 `<logo>my-company</logo>`。图片路径相对于简历 Markdown 文件。
 
+页眉学校 Logo 使用独立字段。可以选择内置预设：
+
+```yaml
+schoolLogo: <school-logo>uestc</school-logo>
+```
+
+也可以直接填写相对于 Markdown 的图片路径：
+
+```yaml
+schoolLogo: school-logo/my-school.png
+```
+
+内置学校 key 包括 `uestc`、`peking-university`、`southeast-university`、
+`northwestern-polytechnical-university`。原有 `logo: logo.png` 继续兼容。
+
 ---
 ##  配置系统
 
 所有视觉参数均通过`omr.config.json`控制。
 
 包括：字体、页边距、行间距、主题颜色、图片尺寸等
+
+样式设置支持将当前配置导出为单个 JSON 文件。"导入并替换"会完整替换
+当前文件夹中的 `omr.config.json`。
 
 示例：
 
@@ -236,27 +254,6 @@ Oh My Resume 会优先读取当前工作目录的本地配置：
 3. Skill 默认配置
 
 > 因此 Skill 更新不会覆盖你的当前简历样式。只要 `omr.config.json` 留在简历目录下，它就会优先覆盖内置推荐值。
-
-### 本地样式模板
-
-可以把常用样式保存到当前目录的 `omr.styles/`：
-
-```text
-omr.styles/
-  current-comfort.json
-  compact.json
-  interview.json
-```
-
-Debug 页面的「样式设置 -> 模板」只读取当前目录的本地模板。如果没有 `omr.styles/*.json`，下拉框会显示为空状态。你也可以在「配置路径」里填写任意相对路径，例如：
-
-```text
-omr.styles/current-comfort.json
-```
-
-也可以点击「打开文件夹」选择包含 JSON 配置的文件夹，页面会读取其中的配置并应用。应用模板会合并 `theme`、`markdown` 和 `logos` 配置，不会修改 Markdown 正文、输入路径或输出路径。
-
----
 
 ##  环境要求
 

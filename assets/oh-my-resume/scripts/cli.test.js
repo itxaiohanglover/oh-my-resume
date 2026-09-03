@@ -3,10 +3,19 @@ const fs = require("fs");
 const http = require("http");
 const os = require("os");
 const path = require("path");
+const vm = require("vm");
 const { spawn } = require("child_process");
 
 const cli = require("./cli");
-const { buildHtmlResume, buildResume, parseMarkdown, renderDocument, renderHtmlDocument } = require("./build");
+const {
+  buildHtmlResume,
+  buildResume,
+  parseMarkdown,
+  readBuiltInSchoolLogos,
+  renderDocument,
+  renderHtmlDocument,
+  resolveSchoolLogo
+} = require("./build");
 
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -85,6 +94,7 @@ async function testDebugServerSurvivesLongRender() {
     "",
     "- Keeps the server alive after rendering."
   ].join("\n"));
+  fs.writeFileSync(path.join(tempDir, "omr.config.json"), JSON.stringify({ obsolete: true }));
 
   const port = 57231;
   const child = spawn(process.execPath, [
@@ -108,6 +118,9 @@ async function testDebugServerSurvivesLongRender() {
     await waitForServer(`http://127.0.0.1:${port}/api/state`);
     const page = await requestJson(`http://127.0.0.1:${port}/`);
     assert.strictEqual(page.statusCode, 200);
+    const scripts = [...page.body.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+    assert.ok(scripts.length, "debug page should include an inline script");
+    assert.doesNotThrow(() => new vm.Script(scripts.at(-1)[1]));
     assert.strictEqual((page.body.match(/class="logoChip builtinLogoChip"/g) || []).length, 21);
     assert.match(page.body, /data-logo-id="china-mobile"/);
     assert.match(page.body, /data-logo-id="tongyi-lab"/);
@@ -124,9 +137,28 @@ async function testDebugServerSurvivesLongRender() {
     assert.match(page.body, /id="quickContactMarginBottom"/);
     assert.match(page.body, /id="quickLogoMarginTop"/);
     assert.match(page.body, /id="quickLogoMarginBottom"/);
+    assert.match(page.body, /id="exportCurrentConfig"/);
+    assert.match(page.body, /id="importCurrentConfig"/);
+    assert.match(page.body, /data-logo-id="uestc"/);
+    assert.match(page.body, /data-logo-id="peking-university"/);
+    assert.match(page.body, /data-logo-id="southeast-university"/);
+    assert.match(page.body, /data-logo-id="northwestern-polytechnical-university"/);
     assert.match(page.body, /builtin-logo\/alibaba\?v=FF6A00/);
     const builtInLogo = await requestJson(`http://127.0.0.1:${port}/builtin-logo/china-mobile?v=0086D0%2C8EC320`);
     assert.strictEqual(builtInLogo.statusCode, 200);
+    const builtInSchoolLogo = await requestJson(`http://127.0.0.1:${port}/builtin-school-logo/uestc`);
+    assert.strictEqual(builtInSchoolLogo.statusCode, 200);
+    const importedConfig = {
+      input: "resume.md",
+      theme: { sizes: { omrBodyFontSize: "12pt" } },
+      schoolLogos: { campus: "campus.png" }
+    };
+    const imported = await requestJson(`http://127.0.0.1:${port}/api/import-config`, {
+      method: "POST",
+      body: JSON.stringify({ config: importedConfig })
+    });
+    assert.strictEqual(imported.statusCode, 200, imported.body);
+    assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(tempDir, "omr.config.json"), "utf8")), importedConfig);
     await requestJson(`http://127.0.0.1:${port}/api/ping`, { method: "POST" });
     const render = await requestJson(`http://127.0.0.1:${port}/api/render`, {
       method: "POST",
@@ -156,19 +188,6 @@ async function testWindowsInstallScriptsAreWired() {
   assert.match(ps, /OMR_TEX_PATH/);
   assert.match(ps, /scripts\\cli\.js\s+doctor/i);
   assert.match(ps, /VerifyPdf/);
-}
-
-async function testLocalPresetsOnlyListCurrentDirectoryJson() {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-preset-test-"));
-  fs.mkdirSync(path.join(tempDir, "omr.styles"));
-  fs.writeFileSync(path.join(tempDir, "omr.styles", "comfort.json"), JSON.stringify({ theme: { sizes: { omrBodyFontSize: "11pt" } } }));
-  fs.writeFileSync(path.join(tempDir, "omr.styles", "notes.txt"), "ignore");
-  const presets = cli.listStylePresets(tempDir);
-  assert.deepStrictEqual(presets, [{
-    id: "local:comfort.json",
-    label: "comfort",
-    path: path.join("omr.styles", "comfort.json")
-  }]);
 }
 
 async function testHtmlRendererBuildsStandalonePreview() {
@@ -368,6 +387,48 @@ async function testInlineLogosRenderBuiltInAndCustomAssets() {
   assert.match(tex, /\\renewcommand\{\\omrContactFontSize\}\{11\.4pt\}/);
 }
 
+async function testSchoolLogosSupportPresetTagAndPaths() {
+  const packageRoot = path.resolve(__dirname, "..");
+  const builtIns = readBuiltInSchoolLogos(packageRoot);
+  assert.deepStrictEqual(builtIns.map((item) => item.id), [
+    "uestc",
+    "peking-university",
+    "southeast-university",
+    "northwestern-polytechnical-university"
+  ]);
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-school-logo-test-"));
+  const customFile = path.join(tempDir, "campus.png");
+  fs.writeFileSync(customFile, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const input = path.join(tempDir, "resume.md");
+  fs.writeFileSync(input, "---\nname: School User\n---\n");
+
+  const preset = resolveSchoolLogo("<school-logo>uestc</school-logo>", { packageRoot, input });
+  assert.strictEqual(path.basename(preset.file), "uestc.png");
+  assert.strictEqual(preset.label, "电子科技大学");
+  const direct = resolveSchoolLogo("campus.png", { packageRoot, input });
+  assert.strictEqual(direct.file, customFile);
+  const custom = resolveSchoolLogo("<school-logo>campus</school-logo>", {
+    packageRoot,
+    input,
+    custom: { campus: "campus.png" }
+  });
+  assert.strictEqual(custom.file, customFile);
+
+  const tex = renderDocument({ name: "School User", schoolLogo: "<school-logo>uestc</school-logo>" }, [], {
+    packageRoot,
+    input
+  });
+  assert.match(tex, /school-logos\/uestc\.png/);
+  const html = renderHtmlDocument({ name: "School User", schoolLogo: "uestc" }, [], {
+    packageRoot,
+    input,
+    config: {}
+  });
+  assert.match(html, /class="logoWrap"/);
+  assert.match(html, /data:image\/png;base64/);
+}
+
 async function testHtmlPdfBrowserCanUseExplicitPath() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-browser-test-"));
   const browser = path.join(tempDir, process.platform === "win32" ? "chrome.cmd" : "chrome");
@@ -379,12 +440,12 @@ async function main() {
   await testWithTexPathUsesExplicitExtraPath();
   await testDebugServerSurvivesLongRender();
   await testWindowsInstallScriptsAreWired();
-  await testLocalPresetsOnlyListCurrentDirectoryJson();
   await testHtmlRendererBuildsStandalonePreview();
   await testNestedBulletsPreserveMarkdownIndentation();
   await testParagraphLinksAreNotParsedAsFields();
   await testAsteriskDividerSeparatesEntries();
   await testInlineLogosRenderBuiltInAndCustomAssets();
+  await testSchoolLogosSupportPresetTagAndPaths();
   await testHtmlPdfBrowserCanUseExplicitPath();
 }
 

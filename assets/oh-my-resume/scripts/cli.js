@@ -6,7 +6,7 @@ const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const { pathToFileURL, URL } = require("url");
-const { buildHtmlResume, buildResume, readBuiltInLogos } = require("./build");
+const { buildHtmlResume, buildResume, readBuiltInLogos, readBuiltInSchoolLogos } = require("./build");
 
 const packageRoot = path.resolve(__dirname, "..");
 const builtInStylePresets = {
@@ -278,57 +278,29 @@ function loadConfig(cwd, configPath) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
-function deepMerge(base, override) {
-  const result = Array.isArray(base) ? [...base] : { ...(base || {}) };
-  for (const [key, value] of Object.entries(override || {})) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      result[key] = deepMerge(result[key] || {}, value);
-    } else {
-      result[key] = value;
+function validateImportedConfig(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("配置文件必须是 JSON 对象。");
+  }
+  for (const key of ["theme", "markdown", "logos", "schoolLogos", "resume"]) {
+    if (value[key] !== undefined && (!value[key] || typeof value[key] !== "object" || Array.isArray(value[key]))) {
+      throw new Error(`配置字段 ${key} 必须是 JSON 对象。`);
     }
   }
-  return result;
+  return value;
 }
 
-function listLocalStylePresets(cwd) {
-  const dir = path.resolve(cwd, "omr.styles");
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
-    .filter((name) => name.endsWith(".json"))
-    .sort()
-    .map((name) => ({
-      id: `local:${name}`,
-      label: name.replace(/\.json$/i, ""),
-      path: path.join("omr.styles", name)
-    }));
-}
-
-function listStylePresets(cwd) {
-  return listLocalStylePresets(cwd);
-}
-
-function readStylePreset(cwd, presetId, presetPath, presetConfig) {
-  if (presetConfig && typeof presetConfig === "object") return presetConfig;
-  if (presetPath) {
-    const file = path.resolve(cwd, presetPath);
-    if (!fs.existsSync(file)) throw new Error(`Style config not found: ${presetPath}`);
-    return JSON.parse(fs.readFileSync(file, "utf8"));
+function writeJsonAtomic(file, value) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temporary = `${file}.${process.pid}.${Date.now()}.tmp`;
+  const descriptor = fs.openSync(temporary, "w");
+  try {
+    fs.writeFileSync(descriptor, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+    fs.fsyncSync(descriptor);
+  } finally {
+    fs.closeSync(descriptor);
   }
-  if (presetId && presetId.startsWith("local:")) {
-    const fileName = presetId.slice("local:".length);
-    const file = path.resolve(cwd, "omr.styles", fileName);
-    if (!fs.existsSync(file)) throw new Error(`Style preset not found: ${fileName}`);
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  }
-  throw new Error("请选择本地配置，或通过文件夹选择器导入配置。");
-}
-
-function mergeStylePreset(current, presetConfig) {
-  return deepMerge(current || {}, {
-    theme: presetConfig.theme || {},
-    markdown: presetConfig.markdown || {},
-    logos: presetConfig.logos || {}
-  });
+  fs.renameSync(temporary, file);
 }
 
 function resolveMarkdownInput(cwd, config, explicitInput) {
@@ -548,6 +520,11 @@ function debugCommand(args) {
     color: item.color || "brand",
     url: `/builtin-logo/${encodeURIComponent(item.id)}?v=${encodeURIComponent(item.color || "brand")}`
   }));
+  const builtInSchoolLogos = readBuiltInSchoolLogos(packageRoot).map((item) => ({
+    id: item.id,
+    label: item.label,
+    url: `/builtin-school-logo/${encodeURIComponent(item.id)}`
+  }));
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(`Markdown file not found: ${input}`);
@@ -557,7 +534,7 @@ function debugCommand(args) {
     const requestUrl = new URL(req.url, "http://127.0.0.1");
 
     if (req.method === "GET" && requestUrl.pathname === "/") {
-      send(res, 200, debugHtml(path.basename(inputPath), builtInLogos));
+      send(res, 200, debugHtml(path.basename(inputPath), builtInLogos, builtInSchoolLogos));
       return;
     }
 
@@ -580,6 +557,19 @@ function debugCommand(args) {
       return;
     }
 
+    if (req.method === "GET" && requestUrl.pathname.startsWith("/builtin-school-logo/")) {
+      const id = decodeURIComponent(requestUrl.pathname.slice("/builtin-school-logo/".length));
+      const item = readBuiltInSchoolLogos(packageRoot).find((logo) => logo.id === id);
+      if (!item) {
+        send(res, 404, "School logo not found", "text/plain; charset=utf-8");
+        return;
+      }
+      const file = path.join(packageRoot, "src", "school-logos", item.file);
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
+      fs.createReadStream(file).pipe(res);
+      return;
+    }
+
     if (req.method === "GET" && requestUrl.pathname === "/api/state") {
       sendJson(res, 200, {
         input: path.relative(cwd, inputPath),
@@ -591,26 +581,17 @@ function debugCommand(args) {
         htmlUrl: fs.existsSync(htmlPath) ? `/html?ts=${Date.now()}` : null,
         htmlPdf: path.relative(cwd, htmlPdfPath),
         engine: config.engine || "latex",
-        builtInLogos
+        builtInLogos,
+        builtInSchoolLogos
       });
       return;
     }
 
-    if (req.method === "GET" && requestUrl.pathname === "/api/presets") {
-      sendJson(res, 200, {
-        configPath: path.relative(cwd, configPath),
-        presets: listStylePresets(cwd)
-      });
-      return;
-    }
-
-    if (req.method === "POST" && requestUrl.pathname === "/api/apply-preset") {
+    if (req.method === "POST" && requestUrl.pathname === "/api/import-config") {
       readJsonBody(req)
         .then((body) => {
-          const current = loadConfig(cwd, args.config);
-          const preset = readStylePreset(cwd, String(body.preset || ""), String(body.path || "").trim(), body.config);
-          const next = mergeStylePreset(current, preset);
-          fs.writeFileSync(configPath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+          const next = validateImportedConfig(body.config);
+          writeJsonAtomic(configPath, next);
           sendJson(res, 200, {
             ok: true,
             config: normalizeDebugConfig(next),
@@ -618,7 +599,7 @@ function debugCommand(args) {
           });
         })
         .catch((error) => {
-          sendJson(res, 500, {
+          sendJson(res, 400, {
             ok: false,
             error: trimError(error.message || String(error))
           });
@@ -787,6 +768,7 @@ function debugCommand(args) {
 function normalizeDebugConfig(config = {}) {
   const theme = config.theme || {};
   return {
+    ...config,
     theme: {
       colors: {
         omrTagBg: "232,241,255",
@@ -862,7 +844,8 @@ omrLinkColor: "37,99,235",
       rightClose: "</right>",
       ...(config.markdown || {})
     },
-    logos: { ...(config.logos || {}) }
+    logos: { ...(config.logos || {}) },
+    schoolLogos: { ...(config.schoolLogos || {}) }
   };
 }
 
@@ -889,7 +872,8 @@ function mergeDebugConfig(current, incoming) {
       rightOpen: cleanTag(normalized.markdown.rightOpen),
       rightClose: cleanTag(normalized.markdown.rightClose)
     },
-    logos: cleanLogoMap(normalized.logos)
+    logos: cleanLogoMap(normalized.logos),
+    schoolLogos: cleanLogoMap(normalized.schoolLogos)
   };
 }
 
@@ -1006,9 +990,13 @@ function openBrowser(url) {
   child.unref();
 }
 
-function debugHtml(fileName, builtInLogos = []) {
+function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
   const builtInLogoButtons = builtInLogos.map((logo) => `
             <button class="logoChip builtinLogoChip" type="button" data-logo-id="${escapeHtml(logo.id)}" title="&lt;logo&gt;${escapeHtml(logo.id)}&lt;/logo&gt;">
+              <img src="${escapeHtml(logo.url)}" alt=""><span>${escapeHtml(logo.label)}</span>
+            </button>`).join("");
+  const builtInSchoolLogoButtons = builtInSchoolLogos.map((logo) => `
+            <button class="logoChip builtinSchoolLogoChip" type="button" data-logo-id="${escapeHtml(logo.id)}" title="&lt;school-logo&gt;${escapeHtml(logo.id)}&lt;/school-logo&gt;">
               <img src="${escapeHtml(logo.url)}" alt=""><span>${escapeHtml(logo.label)}</span>
             </button>`).join("");
   return `<!doctype html>
@@ -1354,13 +1342,11 @@ function debugHtml(fileName, builtInLogos = []) {
     <div class="styleBody">
       <div class="quickMenu">
         <section class="settingsSection">
-          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>模板</p>
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>配置</p>
           <div class="settingsRow">
-            <span class="menuItem"><span class="menuIcon">本地配置</span><select id="presetSelect"></select></span>
-            <span class="menuItem"><span class="menuIcon">配置路径</span><input id="presetPath" placeholder="omr.styles/my-style.json"></span>
-            <input id="presetFolder" type="file" webkitdirectory directory multiple accept=".json,application/json" hidden>
-            <button class="ghost" id="pickPresetFolder" type="button">打开文件夹</button>
-            <button class="ghost" id="applyPreset" type="button">应用模板</button>
+            <input id="configImportFile" type="file" accept=".json,application/json" hidden>
+            <button class="ghost" id="exportCurrentConfig" type="button">导出当前配置</button>
+            <button class="ghost" id="importCurrentConfig" type="button">导入并替换</button>
           </div>
         </section>
         <section class="settingsSection">
@@ -1442,6 +1428,19 @@ function debugHtml(fileName, builtInLogos = []) {
           </div>
         </section>
         <section class="settingsSection">
+          <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg>学校 Logo</p>
+          <div class="logoPresetGroup">
+            <div class="logoLibrary" id="builtinSchoolLogoList">${builtInSchoolLogoButtons}
+            </div>
+          </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">自定义 key</span><input id="customSchoolLogoKey" placeholder="my-school" style="width:110px;"></span>
+            <span class="menuItem"><span class="menuIcon">图片路径</span><input id="customSchoolLogoPath" placeholder="logos/school.png" style="width:190px;"></span>
+            <button class="ghost" id="addCustomSchoolLogo" type="button">添加</button>
+          </div>
+          <div class="logoLibrary" id="customSchoolLogoList"></div>
+        </section>
+        <section class="settingsSection">
           <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v10H4z"/><path d="M8 7V4h8v3M8 17v3h8v-3"/></svg>企业 Logo</p>
           <div class="logoPresetGroup">
             <div class="logoLibrary" id="builtinLogoList">${builtInLogoButtons}
@@ -1478,11 +1477,9 @@ function debugHtml(fileName, builtInLogos = []) {
     const closeStyle = document.getElementById("closeStyle");
     const saveStyle = document.getElementById("saveStyle");
     const resetStyle = document.getElementById("resetStyle");
-    const presetSelect = document.getElementById("presetSelect");
-    const presetPath = document.getElementById("presetPath");
-    const presetFolder = document.getElementById("presetFolder");
-    const pickPresetFolder = document.getElementById("pickPresetFolder");
-    const applyPreset = document.getElementById("applyPreset");
+    const configImportFile = document.getElementById("configImportFile");
+    const exportCurrentConfig = document.getElementById("exportCurrentConfig");
+    const importCurrentConfig = document.getElementById("importCurrentConfig");
     const quickFont = document.getElementById("quickFont");
     const quickEnFont = document.getElementById("quickEnFont");
     const quickSize = document.getElementById("quickSize");
@@ -1527,9 +1524,13 @@ function debugHtml(fileName, builtInLogos = []) {
     const customLogoKey = document.getElementById("customLogoKey");
     const customLogoPath = document.getElementById("customLogoPath");
     const addCustomLogo = document.getElementById("addCustomLogo");
+    const builtinSchoolLogoList = document.getElementById("builtinSchoolLogoList");
+    const customSchoolLogoList = document.getElementById("customSchoolLogoList");
+    const customSchoolLogoKey = document.getElementById("customSchoolLogoKey");
+    const customSchoolLogoPath = document.getElementById("customSchoolLogoPath");
+    const addCustomSchoolLogo = document.getElementById("addCustomSchoolLogo");
     let currentConfig = null;
     let currentConfigPath = "omr.config.json";
-    let uploadedPresetConfig = null;
 
     const alignOptions = [
       ["left", "靠左"],
@@ -1601,8 +1602,8 @@ function debugHtml(fileName, builtInLogos = []) {
       renderCategoryFields();
       renderQuickControls();
       renderLogoLibrary();
+      renderSchoolLogoLibrary();
       captureAlignTags();
-      await renderPresetControls();
       paths.textContent = state.input + " -> " + state.pdf;
       engineSelect.value = state.engine === "html" ? "html" : "latex";
       syncEngineActions();
@@ -1811,24 +1812,6 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       }
     }
 
-    async function renderPresetControls() {
-      const response = await fetch("/api/presets");
-      const data = await response.json();
-      presetSelect.innerHTML = "";
-      const current = document.createElement("option");
-      current.value = "";
-      current.textContent = "未检测到本地配置";
-      presetSelect.appendChild(current);
-      for (const preset of data.presets || []) {
-        const option = document.createElement("option");
-        option.value = preset.id;
-        option.textContent = preset.label;
-        presetSelect.appendChild(option);
-      }
-      if ((data.presets || []).length) current.textContent = "选择本地配置";
-      presetPath.placeholder = data.configPath || currentConfigPath;
-    }
-
     function getPath(source, path) {
       const parts = path.split(".");
       let value = source;
@@ -1853,6 +1836,59 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       const end = editor.selectionEnd;
       editor.setRangeText(value, start, end, "end");
       editor.focus();
+    }
+
+    function setFrontmatterField(key, value) {
+      const source = editor.value;
+      const match = source.match(/^(---\\r?\\n)([\\s\\S]*?)(\\r?\\n---(?:\\r?\\n|$))/);
+      if (!match) {
+        editor.value = "---\\n" + key + ": " + value + "\\n---\\n\\n" + source;
+        editor.focus();
+        return;
+      }
+      const lines = match[2].split(/\\r?\\n/);
+      const index = lines.findIndex((line) => line.startsWith(key + ":"));
+      if (index >= 0) lines[index] = key + ": " + value;
+      else lines.push(key + ": " + value);
+      editor.value = match[1] + lines.join("\\n") + match[3] + source.slice(match[0].length);
+      editor.focus();
+    }
+
+    function chooseSchoolLogo(value, label) {
+      setFrontmatterField("schoolLogo", value);
+      message.className = "";
+      message.textContent = "已选择学校 Logo " + label;
+    }
+
+    function renderSchoolLogoLibrary() {
+      for (const button of builtinSchoolLogoList.querySelectorAll(".builtinSchoolLogoChip")) {
+        if (button.dataset.bound === "true") continue;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => {
+          chooseSchoolLogo("<school-logo>" + button.dataset.logoId + "</school-logo>", button.textContent.trim());
+        });
+      }
+
+      customSchoolLogoList.innerHTML = "";
+      for (const [key, file] of Object.entries(currentConfig.schoolLogos || {})) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "logoChip";
+        button.textContent = key;
+        button.title = file;
+        button.addEventListener("click", () => chooseSchoolLogo("<school-logo>" + key + "</school-logo>", key));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "logoChip logoRemove";
+        remove.textContent = "×";
+        remove.title = "删除 " + key;
+        remove.addEventListener("click", () => {
+          delete currentConfig.schoolLogos[key];
+          renderSchoolLogoLibrary();
+          saveConfigToServer();
+        });
+        customSchoolLogoList.append(button, remove);
+      }
     }
 
     function renderLogoLibrary() {
@@ -1978,35 +2014,40 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       }
     }
 
-    async function applyStylePreset() {
-      applyPreset.disabled = true;
+    async function exportCurrentConfigFile() {
+      await flushConfigToServer();
+      const blob = new Blob([JSON.stringify(currentConfig, null, 2) + "\\n"], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "omr.config.json";
+      anchor.click();
+      URL.revokeObjectURL(url);
       message.className = "";
-      message.textContent = "正在应用模板...";
-      try {
-        const response = await fetch("/api/apply-preset", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            preset: presetSelect.value,
-            path: presetPath.value,
-            config: uploadedPresetConfig
-          })
-        });
-        const data = await response.json();
-        if (!data.ok) throw new Error(data.error || "模板应用失败。");
-        currentConfig = data.config;
-        uploadedPresetConfig = null;
-        renderCategoryFields();
-        renderQuickControls();
-        message.textContent = "已应用模板 " + data.path;
-      } catch (error) {
-        message.className = "error";
-        message.textContent = "模板应用失败";
-        errorText.textContent = error.message || String(error);
-        errorDialog.showModal();
-      } finally {
-        applyPreset.disabled = false;
-      }
+      message.textContent = "已导出当前配置";
+    }
+
+    async function importCurrentConfigFile(file) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      await savePromise.catch(() => {});
+      const config = JSON.parse(await file.text());
+      const response = await fetch("/api/import-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ config })
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "配置导入失败。");
+      currentConfig = data.config;
+      currentConfigPath = data.path || currentConfigPath;
+      renderCategoryFields();
+      renderQuickControls();
+      renderLogoLibrary();
+      renderSchoolLogoLibrary();
+      captureAlignTags();
+      message.className = "";
+      message.textContent = "已导入并替换 " + currentConfigPath;
     }
 
     async function exportSources() {
@@ -2059,25 +2100,23 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     closeError.addEventListener("click", () => errorDialog.close());
     closeStyle.addEventListener("click", () => styleDialog.close());
     styleButton.addEventListener("click", () => { captureAlignTags(); styleDialog.showModal(); });
-    applyPreset.addEventListener("click", applyStylePreset);
-    pickPresetFolder.addEventListener("click", () => presetFolder.click());
-    presetFolder.addEventListener("change", async () => {
-      const files = Array.from(presetFolder.files || []).filter((file) => file.name.toLowerCase().endsWith(".json"));
-      if (!files.length) {
-        message.className = "error";
-        message.textContent = "文件夹中没有 JSON 配置";
-        return;
-      }
-      const file = files[0];
+    exportCurrentConfig.addEventListener("click", () => exportCurrentConfigFile().catch((error) => {
+      message.className = "error";
+      message.textContent = error.message || "配置导出失败";
+    }));
+    importCurrentConfig.addEventListener("click", () => configImportFile.click());
+    configImportFile.addEventListener("change", async () => {
+      const file = configImportFile.files && configImportFile.files[0];
+      if (!file) return;
       try {
-        uploadedPresetConfig = JSON.parse(await file.text());
-        presetPath.value = file.webkitRelativePath || file.name;
-        message.className = "";
-        message.textContent = "已读取配置 " + (file.webkitRelativePath || file.name);
+        await importCurrentConfigFile(file);
       } catch (error) {
-        uploadedPresetConfig = null;
         message.className = "error";
-        message.textContent = "配置 JSON 无法解析";
+        message.textContent = "配置导入失败";
+        errorText.textContent = error.message || String(error);
+        errorDialog.showModal();
+      } finally {
+        configImportFile.value = "";
       }
     });
     quickHeaderAlign.addEventListener("change", applyQuickConfig);
@@ -2141,6 +2180,21 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       customLogoKey.value = "";
       customLogoPath.value = "";
       renderLogoLibrary();
+      saveConfigToServer();
+    });
+    addCustomSchoolLogo.addEventListener("click", () => {
+      const key = customSchoolLogoKey.value.trim().toLowerCase();
+      const file = customSchoolLogoPath.value.trim();
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(key) || !file) {
+        message.className = "error";
+        message.textContent = "学校 Logo key 仅支持小写字母、数字和连字符，且图片路径不能为空";
+        return;
+      }
+      currentConfig.schoolLogos = currentConfig.schoolLogos || {};
+      currentConfig.schoolLogos[key] = file;
+      customSchoolLogoKey.value = "";
+      customSchoolLogoPath.value = "";
+      renderSchoolLogoLibrary();
       saveConfigToServer();
     });
     saveStyle.addEventListener("click", saveStyleConfig);
@@ -2498,6 +2552,5 @@ module.exports = {
   findCommand,
   findHtmlPdfBrowser,
   commandExists,
-  spawnCommandSync,
-  listStylePresets
+  spawnCommandSync
 };

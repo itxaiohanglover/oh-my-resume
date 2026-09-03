@@ -28,6 +28,16 @@ Custom PNG/JPG files can be used directly with
 `logos` object in `omr.config.json`. The debug Style Settings page lists all
 built-in and registered keys.
 
+## Header school logos
+
+Set `schoolLogo: <school-logo>uestc</school-logo>` in Markdown frontmatter for
+a built-in school, or set `schoolLogo` to a PNG/JPG path. Custom reusable keys
+belong under the top-level `schoolLogos` object in `omr.config.json`. The debug
+Style Settings page includes preset, path, and custom-key controls.
+
+The same page exports the active configuration as JSON. Importing replaces the
+active config atomically in the current resume folder.
+
 Use `***` on its own line to insert a gray divider between entries. Configure
 its symmetric spacing with `theme.lengths.omrDividerGap`.
 
