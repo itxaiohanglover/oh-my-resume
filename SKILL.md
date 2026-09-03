@@ -77,12 +77,13 @@ Supported Markdown:
     - Level 3
 ```
 - `**bold**`, `` `tag` ``, and Markdown links
+- `***` on its own line renders a gray divider between content blocks
 - inline company logos with `<logo>alibaba</logo>`
 
 Built-in logo keys are `alibaba`, `alibaba-cloud`, `bytedance`, `baidu`,
-`huawei`, `meituan`, `xiaomi`, `kuaishou`, `alipay`, `taobao`, `apple`, and
-`google`, `china-mobile`, `tongyi-lab`, `pinduoduo`, `xiaohongshu`, `tencent`,
-`kimi`, and `deepseek`. Debug mode lists these at the bottom of Style Settings; selecting one
+`huawei`, `meituan`, `xiaomi`, `kuaishou`, `alipay`, `taobao`, `apple`,
+`google`, `github`, `china-mobile`, `tongyi-lab`, `pinduoduo`, `xiaohongshu`,
+`tencent`, `kimi`, `deepseek`, and `trae`. Debug mode lists these at the bottom of Style Settings; selecting one
 inserts its tag at the Markdown cursor.
 
 For a local PNG or JPG, either reference it directly:
@@ -165,7 +166,14 @@ Use `omr.config.json` for simple theme overrides:
       "omrPageMarginLeft": "8mm",
       "omrPhotoWidth": "2.15cm",
       "omrPhotoHeight": "2.55cm",
-      "omrHeaderGap": "6mm"
+      "omrHeaderGap": "6mm",
+      "omrNameMarginTop": "0em",
+      "omrNameMarginBottom": "0.41em",
+      "omrContactMarginTop": "0.1em",
+      "omrContactMarginBottom": "0.1em",
+      "omrLogoMarginTop": "0mm",
+      "omrLogoMarginBottom": "0mm",
+      "omrDividerGap": "0.3em"
     },
     "fonts": {
       "omrBodyFont": "TeX Gyre Termes",
@@ -173,6 +181,8 @@ Use `omr.config.json` for simple theme overrides:
     },
     "sizes": {
       "omrBodyFontSize": "10pt",
+      "omrNameFontSize": "16.9pt",
+      "omrContactFontSize": "10pt",
       "omrSectionFontSize": "12pt",
       "omrEntryFontSize": "10.5pt"
     }

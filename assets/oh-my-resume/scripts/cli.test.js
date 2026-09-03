@@ -6,7 +6,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const cli = require("./cli");
-const { buildHtmlResume, buildResume, parseMarkdown, renderHtmlDocument } = require("./build");
+const { buildHtmlResume, buildResume, parseMarkdown, renderDocument, renderHtmlDocument } = require("./build");
 
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -108,10 +108,22 @@ async function testDebugServerSurvivesLongRender() {
     await waitForServer(`http://127.0.0.1:${port}/api/state`);
     const page = await requestJson(`http://127.0.0.1:${port}/`);
     assert.strictEqual(page.statusCode, 200);
-    assert.strictEqual((page.body.match(/class="logoChip builtinLogoChip"/g) || []).length, 19);
+    assert.strictEqual((page.body.match(/class="logoChip builtinLogoChip"/g) || []).length, 21);
     assert.match(page.body, /data-logo-id="china-mobile"/);
     assert.match(page.body, /data-logo-id="tongyi-lab"/);
     assert.match(page.body, /data-logo-id="deepseek"/);
+    assert.match(page.body, /data-logo-id="trae"/);
+    assert.match(page.body, /data-logo-id="github"/);
+    assert.match(page.body, /id="quickDividerGap"/);
+    assert.match(page.body, /\*\*\* 分割线上下间距（em）/);
+    assert.match(page.body, /id="quickNameSize"/);
+    assert.match(page.body, /id="quickContactSize"/);
+    assert.match(page.body, /id="quickNameMarginTop"/);
+    assert.match(page.body, /id="quickNameMarginBottom"/);
+    assert.match(page.body, /id="quickContactMarginTop"/);
+    assert.match(page.body, /id="quickContactMarginBottom"/);
+    assert.match(page.body, /id="quickLogoMarginTop"/);
+    assert.match(page.body, /id="quickLogoMarginBottom"/);
     assert.match(page.body, /builtin-logo\/alibaba\?v=FF6A00/);
     const builtInLogo = await requestJson(`http://127.0.0.1:${port}/builtin-logo/china-mobile?v=0086D0%2C8EC320`);
     assert.strictEqual(builtInLogo.statusCode, 200);
@@ -178,7 +190,21 @@ async function testHtmlRendererBuildsStandalonePreview() {
   ].join("\n"));
   fs.writeFileSync(path.join(tempDir, "omr.config.json"), JSON.stringify({
     theme: {
-      sizes: { omrBodyFontSize: "11pt" },
+      lengths: {
+        omrNameMarginTop: "0.2em",
+        omrNameMarginBottom: "0.3em",
+        omrContactMarginTop: "0.1em",
+        omrContactMarginBottom: "0.15em",
+        omrLogoMarginTop: "1mm",
+        omrLogoMarginBottom: "2mm"
+      },
+      sizes: {
+        omrBodyFontSize: "11pt",
+        omrNameFontSize: "18pt",
+        omrNameLineHeight: "21pt",
+        omrContactFontSize: "11.4pt",
+        omrContactLineHeight: "15pt"
+      },
       options: { sectionStyle: "minimal" }
     }
   }));
@@ -193,8 +219,21 @@ async function testHtmlRendererBuildsStandalonePreview() {
   assert.match(html, /<span class="tag">AI<\/span>/);
   assert.match(html, /<strong>fast<\/strong>/);
   assert.match(html, /sectionTitle section-minimal/);
+  assert.match(html, /\.name \{[^}]*font-size: 18pt;[^}]*line-height: 21pt;/);
+  assert.match(html, /\.contact \{[^}]*font-size: 11\.4pt;[^}]*line-height: 15pt;/);
+  assert.match(html, /\.name \{ margin: 0\.2em 0 0\.3em;/);
+  assert.match(html, /\.contactGroup \{ margin: 0\.1em 0 0\.15em;/);
+  assert.match(html, /\.logoWrap \{[^}]*padding-top: 1mm;[^}]*padding-bottom: 2mm;/);
+  assert.match(html, /header \{ position: relative; margin-bottom:/);
+  assert.doesNotMatch(html, /header \{[^}]*min-height:/);
+  assert.match(html, /\.avatarWrap \{[^}]*position: absolute;[^}]*top: 50%;[^}]*translateY\(-50%\);/);
   assert.match(html, /data:image\/jpeg;base64/);
   assert.match(html, /@media print/);
+
+  const headerComponent = fs.readFileSync(path.join(__dirname, "..", "src", "components", "header.tex"), "utf8");
+  assert.match(headerComponent, /\\smash\{\\llap\{/);
+  assert.match(headerComponent, /\\smash\{\\rlap\{/);
+  assert.doesNotMatch(headerComponent, /\\begin\{minipage\}\[c\]\[\\omrPhotoHeight\]/);
 }
 
 async function testNestedBulletsPreserveMarkdownIndentation() {
@@ -218,6 +257,46 @@ async function testNestedBulletsPreserveMarkdownIndentation() {
   assert.match(html, /<li>Third level<\/li>/);
 }
 
+async function testParagraphLinksAreNotParsedAsFields() {
+  const paragraph = "针对 Repo-level 代码生成，构建 **[自进化 Agent](https://github.com/itxaiohanglover/deep-code-research)**，**首次提出**执行反馈驱动的 Skill 蒸馏。";
+  const sections = parseMarkdown([
+    "## Experience",
+    "",
+    "### Project <right>2026</right>",
+    "职责：Agent 系统研发",
+    paragraph
+  ].join("\n"));
+  const entry = sections[0].blocks[0];
+  assert.deepStrictEqual(entry.fields, [{ label: "职责", value: "Agent 系统研发" }]);
+  assert.deepStrictEqual(entry.paragraphs, [paragraph]);
+
+  const html = renderHtmlDocument({ name: "Links" }, sections, { config: {} });
+  assert.match(html, /<strong><a href="https:\/\/github\.com\/itxaiohanglover\/deep-code-research">自进化 Agent<\/a><\/strong>/);
+  assert.match(html, /<strong>首次提出<\/strong>/);
+}
+
+async function testAsteriskDividerSeparatesEntries() {
+  const sections = parseMarkdown([
+    "## Experience",
+    "",
+    "### Alibaba <right>2026</right>",
+    "Built an Agent platform.",
+    "- Runtime infrastructure",
+    "***",
+    "### ByteDance <right>2026</right>",
+    "Built an OPC Agent."
+  ].join("\n"));
+  assert.deepStrictEqual(sections[0].blocks.map((block) => block.type), ["entry", "divider", "entry"]);
+
+  const theme = { lengths: { omrDividerGap: "0.75em" } };
+  const html = renderHtmlDocument({ name: "Divider" }, sections, { config: { theme } });
+  assert.match(html, /<\/article>\n<hr class="divider">\n<article class="entry">/);
+  assert.match(html, /\.divider \{[^}]*margin: 0\.75em 0;/);
+  const tex = renderDocument({ name: "Divider" }, sections, { themeOverrides: theme });
+  assert.match(tex, /\\renewcommand\{\\omrDividerGap\}\{0\.75em\}/);
+  assert.match(tex, /\\omrDivider/);
+}
+
 async function testInlineLogosRenderBuiltInAndCustomAssets() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-logo-test-"));
   fs.writeFileSync(path.join(tempDir, "company.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
@@ -232,12 +311,19 @@ async function testInlineLogosRenderBuiltInAndCustomAssets() {
     "",
     "- Built <logo>my-company</logo> platform.",
     "- Worked with <logo>china-mobile</logo> China Mobile.",
-    "- AI brands: <logo>tongyi-lab</logo> <logo>pinduoduo</logo> <logo>xiaohongshu</logo> <logo>tencent</logo> <logo>kimi</logo> <logo>deepseek</logo>.",
+    "- AI brands: <logo>tongyi-lab</logo> <logo>pinduoduo</logo> <logo>xiaohongshu</logo> <logo>tencent</logo> <logo>kimi</logo> <logo>deepseek</logo> <logo>trae</logo> <logo>github</logo>.",
     "- Direct asset: <logo src=\"company.png\">Direct Company</logo>."
   ].join("\n"));
   fs.writeFileSync(path.join(tempDir, "omr.config.json"), JSON.stringify({
     logos: { "my-company": "company.png" },
-    theme: { lengths: { omrInlineLogoHeight: "1.1em" } }
+    theme: {
+      lengths: {
+        omrInlineLogoHeight: "1.1em",
+        omrLogoMarginTop: "1mm",
+        omrLogoMarginBottom: "2mm"
+      },
+      sizes: { omrNameFontSize: "18pt", omrContactFontSize: "11.4pt" }
+    }
   }));
 
   const htmlResult = buildHtmlResume({
@@ -273,7 +359,13 @@ async function testInlineLogosRenderBuiltInAndCustomAssets() {
   assert.match(tex, /tencent\.png/);
   assert.match(tex, /kimi\.png/);
   assert.match(tex, /deepseek\.png/);
+  assert.match(tex, /trae\.png/);
+  assert.match(tex, /github\.png/);
   assert.match(tex, /\\renewcommand\{\\omrInlineLogoHeight\}\{1\.1em\}/);
+  assert.match(tex, /\\renewcommand\{\\omrLogoMarginTop\}\{1mm\}/);
+  assert.match(tex, /\\renewcommand\{\\omrLogoMarginBottom\}\{2mm\}/);
+  assert.match(tex, /\\renewcommand\{\\omrNameFontSize\}\{18pt\}/);
+  assert.match(tex, /\\renewcommand\{\\omrContactFontSize\}\{11\.4pt\}/);
 }
 
 async function testHtmlPdfBrowserCanUseExplicitPath() {
@@ -290,6 +382,8 @@ async function main() {
   await testLocalPresetsOnlyListCurrentDirectoryJson();
   await testHtmlRendererBuildsStandalonePreview();
   await testNestedBulletsPreserveMarkdownIndentation();
+  await testParagraphLinksAreNotParsedAsFields();
+  await testAsteriskDividerSeparatesEntries();
   await testInlineLogosRenderBuiltInAndCustomAssets();
   await testHtmlPdfBrowserCanUseExplicitPath();
 }

@@ -12,3 +12,6 @@ https://en.wikipedia.org/wiki/File:China_Mobile_logo_(2019).svg.
 
 The Tencent icon is sourced from Tencent's official media resources. The
 Pinduoduo mark is based on the Pinduoduo logo published on Wikimedia.
+
+The Trae and GitHub icons are sourced from Simple Icons using their primary
+brand colors. Trae's mark was cross-checked against the official website favicon.

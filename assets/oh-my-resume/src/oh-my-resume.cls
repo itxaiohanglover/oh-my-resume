@@ -54,6 +54,12 @@
 \newcommand{\omrPhotoRightInset}{0mm}
 \newcommand{\omrHeaderNameGap}{0.34em}
 \newcommand{\omrHeaderLineGap}{0.06em}
+\newcommand{\omrNameMarginTop}{0em}
+\newcommand{\omrNameMarginBottom}{\omrHeaderNameGap}
+\newcommand{\omrContactMarginTop}{\omrHeaderLineGap}
+\newcommand{\omrContactMarginBottom}{\omrHeaderLineGap}
+\newcommand{\omrLogoMarginTop}{0mm}
+\newcommand{\omrLogoMarginBottom}{0mm}
 \newcommand{\omrHeadingOneBefore}{0.35em}
 \newcommand{\omrHeadingOneAfter}{0.18em}
 \newcommand{\omrSectionBefore}{0.46em}
@@ -63,11 +69,16 @@
 \newcommand{\omrEntryAfter}{0em}
 \newcommand{\omrHeadingFourBefore}{0.35em}
 \newcommand{\omrHeadingFourAfter}{0.18em}
+\newcommand{\omrDividerGap}{0.3em}
 \newcommand{\omrEntryDateWidth}{39mm}
 \newcommand{\omrBodyFont}{TeX Gyre Termes}
 \newcommand{\omrCJKMainFont}{Songti SC}
 \newcommand{\omrBodyFontSize}{10pt}
 \newcommand{\omrBodyLineHeight}{13pt}
+\newcommand{\omrNameFontSize}{16.9pt}
+\newcommand{\omrNameLineHeight}{19pt}
+\newcommand{\omrContactFontSize}{10pt}
+\newcommand{\omrContactLineHeight}{13pt}
 \newcommand{\omrHOneFontSize}{16pt}
 \newcommand{\omrHOneLineHeight}{19pt}
 \newcommand{\omrSectionFontSize}{11.4pt}

@@ -1,6 +1,6 @@
-\newcommand{\omrName}[1]{{\Large\bfseries #1}\par\vspace{\omrHeaderNameGap}}
+\newcommand{\omrName}[1]{\vspace*{\omrNameMarginTop}{\fontsize{\omrNameFontSize}{\omrNameLineHeight}\selectfont\bfseries #1}\par\vspace{\omrNameMarginBottom}}
 \newcommand{\name}[1]{\omrName{#1}}
-\newcommand{\omrContactLine}[1]{{\color{omrTextMuted} #1}\par\vspace{\omrHeaderLineGap}}
+\newcommand{\omrContactLine}[1]{{\fontsize{\omrContactFontSize}{\omrContactLineHeight}\selectfont\color{omrTextMuted} #1}\par}
 \newcommand{\contactLine}[1]{\omrContactLine{#1}}
 
 \newcommand{\email}[1]{\faEnvelope\ #1}
@@ -12,13 +12,24 @@
 \newcommand{\omrHeaderText}[2]{%
   \ifthenelse{\equal{\omrHeaderAlign}{left}}{\raggedright}{\centering}%
   \omrName{#1}%
+  \vspace*{\omrContactMarginTop}%
   #2%
+  \vspace*{\omrContactMarginBottom}%
+}
+
+\newcommand{\omrHeaderLogo}[1]{%
+  \begin{minipage}[c]{0.4\linewidth}
+    \vspace*{\omrLogoMarginTop}%
+    \raggedright
+    \includegraphics[height=\omrLogoHeight,keepaspectratio]{#1}\par
+    \vspace*{\omrLogoMarginBottom}%
+  \end{minipage}%
 }
 
 \newcommand{\omrHeader}[4]{%
   \noindent
   \ifthenelse{\isempty{#4}}{}{%
-    \rlap{\hspace{-2mm}\raisebox{4mm}{\includegraphics[height=\omrLogoHeight,keepaspectratio]{#4}}}%
+    \smash{\rlap{\hspace{-2mm}\omrHeaderLogo{#4}}}%
   }%
   \ifthenelse{\isempty{#3}}{%
     \begin{minipage}[t]{\linewidth}
@@ -26,15 +37,15 @@
       \omrHeaderText{#1}{#2}
     \end{minipage}%
   }{%
-    \begin{minipage}[c][\omrPhotoHeight][c]{\linewidth}
+    \begin{minipage}[c]{\linewidth}
       \vspace{0pt}
       \omrHeaderText{#1}{#2}
     \end{minipage}%
-    \llap{%
-      \begin{minipage}[c][\omrPhotoHeight][c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
+    \smash{\llap{%
+      \begin{minipage}[c]{\dimexpr\omrPhotoWidth+\omrPhotoRightInset\relax}
         \raggedleft
         \includegraphics[height=\omrPhotoHeight,keepaspectratio]{#3}
       \end{minipage}%
-    }%
+    }}%
   }%
 }

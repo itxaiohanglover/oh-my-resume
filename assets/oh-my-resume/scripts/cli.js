@@ -27,7 +27,13 @@ const builtInStylePresets = {
           omrPageMarginBottom: "8mm",
           omrHeaderGap: "7mm",
           omrHeaderNameGap: "0.41em",
-          omrHeaderLineGap: "0.1em"
+          omrHeaderLineGap: "0.1em",
+          omrNameMarginTop: "0em",
+          omrNameMarginBottom: "0.41em",
+          omrContactMarginTop: "0.1em",
+          omrContactMarginBottom: "0.1em",
+          omrLogoMarginTop: "0mm",
+          omrLogoMarginBottom: "0mm"
         },
         fonts: {
           omrBodyFont: "TeX Gyre Termes",
@@ -89,6 +95,12 @@ const builtInStylePresets = {
           omrPageMarginBottom: "8mm",
           omrHeaderNameGap: "0.41em",
           omrHeaderLineGap: "0.1em",
+          omrNameMarginTop: "0em",
+          omrNameMarginBottom: "0.41em",
+          omrContactMarginTop: "0.1em",
+          omrContactMarginBottom: "0.1em",
+          omrLogoMarginTop: "0mm",
+          omrLogoMarginBottom: "0mm",
           omrTitleBodyGap: "0.38em",
           omrHeadingOneBefore: "0.42em",
           omrHeadingOneAfter: "0.22em",
@@ -208,6 +220,12 @@ function initProject(targetDir) {
               omrHeaderGap: "7mm",
               omrHeaderNameGap: "0.41em",
               omrHeaderLineGap: "0.1em",
+              omrNameMarginTop: "0em",
+              omrNameMarginBottom: "0.41em",
+              omrContactMarginTop: "0.1em",
+              omrContactMarginBottom: "0.1em",
+              omrLogoMarginTop: "0mm",
+              omrLogoMarginBottom: "0mm",
               omrTitleBodyGap: "0.38em",
               omrHeadingOneBefore: "0.42em",
               omrHeadingOneAfter: "0.22em",
@@ -215,6 +233,7 @@ function initProject(targetDir) {
               omrSectionAfter: "0.54em",
               omrEntryBefore: "0.23em",
               omrEntryAfter: "0.22em",
+              omrDividerGap: "0.3em",
               omrEntryDateWidth: "39mm",
               omrPhotoRightInset: "0mm"
             },
@@ -225,6 +244,10 @@ function initProject(targetDir) {
             sizes: {
               omrBodyFontSize: "11.2pt",
               omrBodyLineHeight: "14.5pt",
+              omrNameFontSize: "16.9pt",
+              omrNameLineHeight: "19pt",
+              omrContactFontSize: "10pt",
+              omrContactLineHeight: "13pt",
               omrHOneFontSize: "16.9pt",
               omrHOneLineHeight: "19pt",
               omrSectionFontSize: "12.1pt",
@@ -782,6 +805,12 @@ omrLinkColor: "37,99,235",
         omrHeaderGap: "7mm",
         omrHeaderNameGap: "0.41em",
         omrHeaderLineGap: "0.1em",
+        omrNameMarginTop: "0em",
+        omrNameMarginBottom: "0.41em",
+        omrContactMarginTop: "0.1em",
+        omrContactMarginBottom: "0.1em",
+        omrLogoMarginTop: "0mm",
+        omrLogoMarginBottom: "0mm",
         omrTitleBodyGap: "0.38em",
         omrHeadingOneBefore: "0.42em",
         omrHeadingOneAfter: "0.22em",
@@ -789,6 +818,7 @@ omrLinkColor: "37,99,235",
         omrSectionAfter: "0.54em",
         omrEntryBefore: "0.23em",
         omrEntryAfter: "0.22em",
+        omrDividerGap: "0.3em",
         omrEntryDateWidth: "39mm",
         omrPhotoRightInset: "0mm",
         omrLogoHeight: "1.2cm",
@@ -803,6 +833,10 @@ omrLinkColor: "37,99,235",
       sizes: {
         omrBodyFontSize: "11.2pt",
         omrBodyLineHeight: "14.5pt",
+        omrNameFontSize: "16.9pt",
+        omrNameLineHeight: "19pt",
+        omrContactFontSize: "10pt",
+        omrContactLineHeight: "13pt",
         omrHOneFontSize: "16.9pt",
         omrHOneLineHeight: "19pt",
         omrSectionFontSize: "12.1pt",
@@ -1343,6 +1377,7 @@ function debugHtml(fileName, builtInLogos = []) {
               <span style="font-size:11px;color:var(--muted);">上</span><input id="quickSpacingBefore" placeholder="0.58" style="width:38px;">
               <span style="font-size:11px;color:var(--muted);">下</span><input id="quickSpacingAfter" placeholder="0.54" style="width:38px;">
             </span>
+            <span class="menuItem"><span class="menuIcon">*** 分割线上下间距（em）</span><input id="quickDividerGap" placeholder="0.3" style="width:54px;"></span>
           </div>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">页边距（mm）</span><select id="quickMarginPreset">
@@ -1371,6 +1406,18 @@ function debugHtml(fileName, builtInLogos = []) {
               <option value="right">右对齐</option>
             </select><span style="font-size:11px;color:var(--muted);">开</span><input id="alignOpen" placeholder="<center>" style="width:80px;"><span style="font-size:11px;color:var(--muted);">闭</span><input id="alignClose" placeholder="</center>" style="width:80px;"><span style="font-size:10px;color:var(--muted);margin-left:4px;">请输入你喜欢的命名方式</span></span>
           </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">姓名字号（pt）</span><input id="quickNameSize" placeholder="16.9"></span>
+            <span class="menuItem"><span class="menuIcon">姓名行高（pt）</span><input id="quickNameLine" placeholder="19"></span>
+            <span class="menuItem"><span class="menuIcon">联系方式字号（pt）</span><input id="quickContactSize" placeholder="10"></span>
+            <span class="menuItem"><span class="menuIcon">联系方式行高（pt）</span><input id="quickContactLine" placeholder="13"></span>
+          </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">姓名上间距（em）</span><input id="quickNameMarginTop" placeholder="0"></span>
+            <span class="menuItem"><span class="menuIcon">姓名下间距（em）</span><input id="quickNameMarginBottom" placeholder="0.41"></span>
+            <span class="menuItem"><span class="menuIcon">联系方式上间距（em）</span><input id="quickContactMarginTop" placeholder="0.1"></span>
+            <span class="menuItem"><span class="menuIcon">联系方式下间距（em）</span><input id="quickContactMarginBottom" placeholder="0.1"></span>
+          </div>
         </section>
         <section class="settingsSection">
           <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>主题</p>
@@ -1390,6 +1437,8 @@ function debugHtml(fileName, builtInLogos = []) {
             <span class="menuItem"><span class="menuIcon">个人照片高度（cm）</span><input id="quickPhoto" placeholder="2.75"></span>
             <span class="menuItem"><span class="menuIcon">学校logo高度（cm）</span><input id="quickLogo" placeholder="1.2"></span>
             <span class="menuItem"><span class="menuIcon">行内logo高度（em）</span><input id="quickInlineLogo" placeholder="1"></span>
+            <span class="menuItem"><span class="menuIcon">学校logo上间距（mm）</span><input id="quickLogoMarginTop" placeholder="0"></span>
+            <span class="menuItem"><span class="menuIcon">学校logo下间距（mm）</span><input id="quickLogoMarginBottom" placeholder="0"></span>
           </div>
         </section>
         <section class="settingsSection">
@@ -1439,9 +1488,18 @@ function debugHtml(fileName, builtInLogos = []) {
     const quickSize = document.getElementById("quickSize");
     const sizeLevel = document.getElementById("sizeLevel");
     const quickLine = document.getElementById("quickLine");
+    const quickNameSize = document.getElementById("quickNameSize");
+    const quickNameLine = document.getElementById("quickNameLine");
+    const quickContactSize = document.getElementById("quickContactSize");
+    const quickContactLine = document.getElementById("quickContactLine");
+    const quickNameMarginTop = document.getElementById("quickNameMarginTop");
+    const quickNameMarginBottom = document.getElementById("quickNameMarginBottom");
+    const quickContactMarginTop = document.getElementById("quickContactMarginTop");
+    const quickContactMarginBottom = document.getElementById("quickContactMarginBottom");
     const spacingLevel = document.getElementById("spacingLevel");
     const quickSpacingBefore = document.getElementById("quickSpacingBefore");
     const quickSpacingAfter = document.getElementById("quickSpacingAfter");
+    const quickDividerGap = document.getElementById("quickDividerGap");
     const quickMarginPreset = document.getElementById("quickMarginPreset");
     const quickMarginTop = document.getElementById("quickMarginTop");
     const quickMarginBottom = document.getElementById("quickMarginBottom");
@@ -1450,6 +1508,8 @@ function debugHtml(fileName, builtInLogos = []) {
     const quickPhoto = document.getElementById("quickPhoto");
     const quickLogo = document.getElementById("quickLogo");
     const quickInlineLogo = document.getElementById("quickInlineLogo");
+    const quickLogoMarginTop = document.getElementById("quickLogoMarginTop");
+    const quickLogoMarginBottom = document.getElementById("quickLogoMarginBottom");
     const quickPhotoInset = document.getElementById("quickPhotoInset");
     const quickHeaderAlign = document.getElementById("quickHeaderAlign");
     const quickSectionStyle = document.getElementById("quickSectionStyle");
@@ -1567,6 +1627,7 @@ function debugHtml(fileName, builtInLogos = []) {
       message.className = "";
       message.textContent = "正在渲染...";
       try {
+        await flushConfigToServer();
         const engine = engineSelect.value || "latex";
         const response = await fetch("/api/render", {
           method: "POST",
@@ -1693,16 +1754,27 @@ function debugHtml(fileName, builtInLogos = []) {
       fillSelect(quickEnFont, enFontOptions, getPath(currentConfig, "theme.fonts.omrBodyFont"));
       renderSizeInput();
       quickLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrBodyLineHeight"));
+      quickNameSize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrNameFontSize"));
+      quickNameLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrNameLineHeight"));
+      quickContactSize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrContactFontSize"));
+      quickContactLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrContactLineHeight"));
+      quickNameMarginTop.value = extractNumber(getPath(currentConfig, "theme.lengths.omrNameMarginTop"));
+      quickNameMarginBottom.value = extractNumber(getPath(currentConfig, "theme.lengths.omrNameMarginBottom"));
+      quickContactMarginTop.value = extractNumber(getPath(currentConfig, "theme.lengths.omrContactMarginTop"));
+      quickContactMarginBottom.value = extractNumber(getPath(currentConfig, "theme.lengths.omrContactMarginBottom"));
       quickMarginTop.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginTop"));
       quickMarginBottom.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginBottom"));
       quickMarginLeft.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginLeft"));
       quickMarginRight.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPageMarginRight"));
       renderSpacingInputs();
+      quickDividerGap.value = extractNumber(getPath(currentConfig, "theme.lengths.omrDividerGap"));
       fillSelect(quickMarginPreset, marginPresetOptions, "");
       renderAlignControls();
       quickPhoto.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoHeight"));
       quickLogo.value = extractNumber(getPath(currentConfig, "theme.lengths.omrLogoHeight"));
       quickInlineLogo.value = extractNumber(getPath(currentConfig, "theme.lengths.omrInlineLogoHeight"));
+      quickLogoMarginTop.value = extractNumber(getPath(currentConfig, "theme.lengths.omrLogoMarginTop"));
+      quickLogoMarginBottom.value = extractNumber(getPath(currentConfig, "theme.lengths.omrLogoMarginBottom"));
       quickPhotoInset.value = extractNumber(getPath(currentConfig, "theme.lengths.omrPhotoRightInset"));
       quickTagBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagBg"));
       quickTagText.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagText"));
@@ -1846,13 +1918,24 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       setPath(currentConfig, "theme.fonts.omrBodyFont", quickEnFont.value);
       setPath(currentConfig, "theme.sizes.omr" + ({body:"Body",section:"Section",entry:"Entry"})[sizeLevel.value] + "FontSize", quickSize.value + "pt");
       setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrNameFontSize", quickNameSize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrNameLineHeight", quickNameLine.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrContactFontSize", quickContactSize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrContactLineHeight", quickContactLine.value + "pt");
+      setPath(currentConfig, "theme.lengths.omrNameMarginTop", quickNameMarginTop.value + "em");
+      setPath(currentConfig, "theme.lengths.omrNameMarginBottom", quickNameMarginBottom.value + "em");
+      setPath(currentConfig, "theme.lengths.omrContactMarginTop", quickContactMarginTop.value + "em");
+      setPath(currentConfig, "theme.lengths.omrContactMarginBottom", quickContactMarginBottom.value + "em");
       setPath(currentConfig, "theme.lengths.omrPageMarginTop", quickMarginTop.value + "mm");
       setPath(currentConfig, "theme.lengths.omrPageMarginBottom", quickMarginBottom.value + "mm");
       setPath(currentConfig, "theme.lengths.omrPageMarginLeft", quickMarginLeft.value + "mm");
       setPath(currentConfig, "theme.lengths.omrPageMarginRight", quickMarginRight.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrDividerGap", quickDividerGap.value + "em");
       setPath(currentConfig, "theme.lengths.omrPhotoHeight", quickPhoto.value + "cm");
       setPath(currentConfig, "theme.lengths.omrLogoHeight", quickLogo.value + "cm");
       setPath(currentConfig, "theme.lengths.omrInlineLogoHeight", quickInlineLogo.value + "em");
+      setPath(currentConfig, "theme.lengths.omrLogoMarginTop", quickLogoMarginTop.value + "mm");
+      setPath(currentConfig, "theme.lengths.omrLogoMarginBottom", quickLogoMarginBottom.value + "mm");
       setPath(currentConfig, "theme.lengths.omrPhotoRightInset", quickPhotoInset.value + "mm");
       renderCategoryFields();
       saveConfigToServer();
@@ -2008,6 +2091,14 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     sizeLevel.addEventListener("change", renderSizeInput);
     quickSize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);
+    quickNameSize.addEventListener("input", applyQuickConfig);
+    quickNameLine.addEventListener("input", applyQuickConfig);
+    quickContactSize.addEventListener("input", applyQuickConfig);
+    quickContactLine.addEventListener("input", applyQuickConfig);
+    quickNameMarginTop.addEventListener("input", applyQuickConfig);
+    quickNameMarginBottom.addEventListener("input", applyQuickConfig);
+    quickContactMarginTop.addEventListener("input", applyQuickConfig);
+    quickContactMarginBottom.addEventListener("input", applyQuickConfig);
     quickMarginTop.addEventListener("input", applyQuickConfig);
     quickMarginBottom.addEventListener("input", applyQuickConfig);
     quickMarginLeft.addEventListener("input", applyQuickConfig);
@@ -2027,12 +2118,15 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     spacingLevel.addEventListener("change", () => { renderSpacingInputs(); });
     quickSpacingBefore.addEventListener("input", saveSpacing);
     quickSpacingAfter.addEventListener("input", saveSpacing);
+    quickDividerGap.addEventListener("input", applyQuickConfig);
     quickMarginPreset.addEventListener("change", () => {
       applyMarginPreset(quickMarginPreset.value);
     });
     quickPhoto.addEventListener("input", applyQuickConfig);
     quickLogo.addEventListener("input", applyQuickConfig);
     quickInlineLogo.addEventListener("input", applyQuickConfig);
+    quickLogoMarginTop.addEventListener("input", applyQuickConfig);
+    quickLogoMarginBottom.addEventListener("input", applyQuickConfig);
     quickPhotoInset.addEventListener("input", applyQuickConfig);
     addCustomLogo.addEventListener("click", () => {
       const key = customLogoKey.value.trim().toLowerCase();
@@ -2051,22 +2145,38 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     });
     saveStyle.addEventListener("click", saveStyleConfig);
     let saveTimer = null;
+    let savePromise = Promise.resolve();
+    async function persistConfigToServer(config, notify = true) {
+      const response = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ config })
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "Style save failed.");
+      currentConfig = data.config;
+      if (notify) {
+        message.className = "";
+        message.textContent = "已保存 " + new Date().toLocaleTimeString();
+      }
+      return data;
+    }
+    function enqueueConfigSave(notify = true) {
+      const snapshot = JSON.parse(JSON.stringify(currentConfig));
+      savePromise = savePromise.catch(() => {}).then(() => persistConfigToServer(snapshot, notify));
+      return savePromise;
+    }
     function saveConfigToServer() {
       clearTimeout(saveTimer);
-      saveTimer = setTimeout(async () => {
-        try {
-          const response = await fetch("/api/config", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ config: currentConfig })
-          });
-          const data = await response.json();
-          if (data.ok) {
-            message.className = "";
-            message.textContent = "已保存 " + new Date().toLocaleTimeString();
-          }
-        } catch (e) { /* silent */ }
+      saveTimer = setTimeout(() => {
+        saveTimer = null;
+        enqueueConfigSave().catch(() => {});
       }, 300);
+    }
+    async function flushConfigToServer() {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      await enqueueConfigSave(false);
     }
     customColor.addEventListener("input", () => {
       const rgb = hexToRgb(customColor.value);

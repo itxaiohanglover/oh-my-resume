@@ -28,6 +28,9 @@ Custom PNG/JPG files can be used directly with
 `logos` object in `omr.config.json`. The debug Style Settings page lists all
 built-in and registered keys.
 
+Use `***` on its own line to insert a gray divider between entries. Configure
+its symmetric spacing with `theme.lengths.omrDividerGap`.
+
 ## Windows first-run setup
 
 Run the Windows setup helper before first PDF generation:

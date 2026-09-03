@@ -142,6 +142,7 @@ Oh My Resume 使用 Markdown 作为唯一事实源。
 - `-`、`  -`、`    -` 会分别渲染为一级、二级、三级列表。
 - `**重点**` 会加粗。
 - `[文本](链接)` 会保留为可点击链接。
+- 单独一行的 `***` 会渲染为灰黑色块分割线。
 - `<logo>alibaba</logo>` 会渲染为与文字基线对齐的企业 Logo。
 
 内置 key：`alibaba`、`alibaba-cloud`、`bytedance`、`baidu`、`huawei`、
@@ -149,7 +150,7 @@ Oh My Resume 使用 Markdown 作为唯一事实源。
 另支持中国移动：`china-mobile`。
 
 AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
-`tencent`、`kimi`、`deepseek`。
+`tencent`、`kimi`、`deepseek`、`trae`、`github`。
 
 自定义图片可直接写入 Markdown（PNG/JPG）：
 
@@ -192,7 +193,14 @@ AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
       "omrPhotoHeight": "2.75cm",
       "omrInlineLogoHeight": "1em",
       "omrHeaderNameGap": "0.41em",
-      "omrSectionAfter": "0.54em"
+      "omrNameMarginTop": "0em",
+      "omrNameMarginBottom": "0.41em",
+      "omrContactMarginTop": "0.1em",
+      "omrContactMarginBottom": "0.1em",
+      "omrLogoMarginTop": "0mm",
+      "omrLogoMarginBottom": "0mm",
+      "omrSectionAfter": "0.54em",
+      "omrDividerGap": "0.3em"
     },
     "fonts": {
       "omrBodyFont": "TeX Gyre Termes",
@@ -201,6 +209,10 @@ AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
     "sizes": {
       "omrBodyFontSize": "11.2pt",
       "omrBodyLineHeight": "14.5pt",
+      "omrNameFontSize": "16.9pt",
+      "omrNameLineHeight": "19pt",
+      "omrContactFontSize": "10pt",
+      "omrContactLineHeight": "13pt",
       "omrSectionFontSize": "12.1pt",
       "omrEntryFontSize": "10.5pt"
     }
