@@ -645,20 +645,19 @@ function renderEntry(entry) {
   const tags = entry.tags.map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
   const title = `${inline(entry.title)}${tags}`;
   const date = entry.date ? `\\tightdate{${inline(entry.date)}}` : "";
+  const cTags = entry.center ? (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("") : "";
+  const cText = entry.center ? `${inline(entry.center.text)}${cTags}` : "";
+  const left = entry.left ? inline(entry.left) : "";
   const parts = [];
 
   if (entry.color) {
-    const command = entry.color.type === "rgb" ? "\\omrColoredDatedEntryRgb" : "\\omrColoredDatedEntry";
-    parts.push(`${command}{${entry.color.value}}{${title}}{${date}}`);
+    const command = entry.color.type === "rgb" ? "\\omrColoredDatedEntryFullRgb" : "\\omrColoredDatedEntryFull";
+    parts.push(`${command}{${entry.color.value}}{${title}}{${left}}{${cText}}{${date}}`);
   } else if (entry.left && entry.center) {
-    const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
-    const cText = `${inline(entry.center.text)}${cTags}`;
-    parts.push(`\\datedsubsectionLC{${title}}{${inline(entry.left)}}{${cText}}{${date}}`);
+    parts.push(`\\datedsubsectionLC{${title}}{${left}}{${cText}}{${date}}`);
   } else if (entry.left) {
-    parts.push(`\\datedsubsectionL{${title}}{${inline(entry.left)}}{${date}}`);
+    parts.push(`\\datedsubsectionL{${title}}{${left}}{${date}}`);
   } else if (entry.center) {
-    const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
-    const cText = `${inline(entry.center.text)}${cTags}`;
     parts.push(`\\datedsubsectionC{${title}}{${cText}}{${date}}`);
   } else {
     parts.push(`\\datedsubsection{${title}}{${date}}`);

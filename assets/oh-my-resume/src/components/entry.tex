@@ -39,6 +39,55 @@
   \endgroup
   \vspace{\omrEntryAfter}%
 }
+\newcommand{\omrColoredDatedEntryFull}[5]{%
+  \omrColorEntryColors{#1}%
+  \omrColoredDatedEntryFullWithBg{\omrColorEntryBg}{#2}{#3}{#4}{#5}%
+}
+\newcommand{\omrColoredDatedEntryFullRgb}[5]{%
+  \begingroup\definecolor{omrColorEntryCustomBg}{RGB}{#1}%
+  \omrColoredDatedEntryFullWithBg{omrColorEntryCustomBg}{#2}{#3}{#4}{#5}%
+  \endgroup
+}
+\newcommand{\omrColoredDatedEntryFullWithBg}[5]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{#1}{\makebox[\linewidth][l]{%
+    \ifthenelse{\isempty{#3}}{%
+      \ifthenelse{\isempty{#4}}{%
+        \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{\bfseries #2}%
+        \hfill
+        \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#5}%
+      }{%
+        \rlap{\bfseries #2\hspace{1em}}%
+        \hfill
+        \makebox[0pt][c]{\bfseries #4}%
+        \hfill
+        \llap{\hspace{1em}\normalfont\color{omrTextMuted}#5}%
+      }%
+    }{%
+      \ifthenelse{\isempty{#4}}{%
+        \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{%
+          \normalfont\color{omrTextMuted}#3\hspace{0.5em}{\bfseries #2}%
+        }%
+        \hfill
+        \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#5}%
+      }{%
+        \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{%
+          \normalfont\color{omrTextMuted}#3\hspace{0.5em}{\bfseries #2}%
+        }%
+        \hfill
+        \makebox[0pt][c]{\bfseries #4}%
+        \hfill
+        \llap{\hspace{1em}\normalfont\color{omrTextMuted}#5}%
+      }%
+    }%
+  }}\par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\datedsubsectionC}[3]{%
   \vspace{\omrEntryBefore}%
   \noindent

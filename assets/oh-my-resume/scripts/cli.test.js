@@ -329,11 +329,13 @@ async function testColorEntryBarsSupportThreeConfigurableTones() {
     "",
     "### <color color=\"blue\">Blue entry <right>2026</right></color>",
     "### <color color=\"pink\">Pink entry <right>2025</right></color>",
-    "### <color color='#f0f4ff'>Custom entry <right>2024</right></color>"
+    "### <color color='#f0f4ff'>Custom entry <right>2024</right></color>",
+    "### <color color=\"blue\">Company <center>Role `Agent`</center><right>2026</right></color>"
   ].join("\n"));
   assert.deepStrictEqual(sections[0].blocks.map((entry) => entry.color), [
-    { type: "named", value: "blue" }, { type: "named", value: "pink" }, { type: "rgb", value: "240,244,255" }
+    { type: "named", value: "blue" }, { type: "named", value: "pink" }, { type: "rgb", value: "240,244,255" }, { type: "named", value: "blue" }
   ]);
+  assert.deepStrictEqual(sections[0].blocks[3].center, { text: "Role", tags: ["Agent"] });
 
   const theme = { colors: { omrColorPinkBg: "250,230,235" } };
   const html = renderHtmlDocument({ name: "Colors" }, sections, { config: { theme } });
@@ -343,9 +345,10 @@ async function testColorEntryBarsSupportThreeConfigurableTones() {
   assert.match(html, /\.color-pink \{ background: rgb\(250,230,235\); \}/);
 
   const tex = renderDocument({ name: "Colors" }, sections, { themeOverrides: theme });
-  assert.match(tex, /\\omrColoredDatedEntry\{blue\}/);
-  assert.match(tex, /\\omrColoredDatedEntry\{pink\}/);
-  assert.match(tex, /\\omrColoredDatedEntryRgb\{240,244,255\}/);
+  assert.match(tex, /\\omrColoredDatedEntryFull\{blue\}/);
+  assert.match(tex, /\\omrColoredDatedEntryFull\{pink\}/);
+  assert.match(tex, /\\omrColoredDatedEntryFullRgb\{240,244,255\}/);
+  assert.match(tex, /\\omrColoredDatedEntryFull\{blue\}\{Company\}\{\}\{Role~\\tagbox\{Agent\}\}\{\\tightdate\{2026\}\}/);
   assert.match(tex, /\\definecolor\{omrColorPinkBg\}\{RGB\}\{250,230,235\}/);
 }
 
