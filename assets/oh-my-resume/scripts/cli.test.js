@@ -63,11 +63,11 @@ async function waitForServer(url) {
 function makeFakeLatexmk(dir) {
   fs.mkdirSync(dir, { recursive: true });
   if (process.platform === "win32") {
-    fs.writeFileSync(path.join(dir, "latexmk.cmd"), "@echo off\r\npowershell -NoProfile -Command Start-Sleep -Seconds 14\r\nexit /b 0\r\n");
+    fs.writeFileSync(path.join(dir, "latexmk.cmd"), "@echo off\r\npowershell -NoProfile -Command \"Start-Sleep -Seconds 14; New-Item -ItemType Directory -Force -Path 'build' ^| Out-Null; Set-Content -Path 'build/resume.pdf' -Value '%%PDF-fake'\"\r\nexit /b 0\r\n");
     return;
   }
   const file = path.join(dir, "latexmk");
-  fs.writeFileSync(file, "#!/bin/sh\nsleep 14\nexit 0\n");
+  fs.writeFileSync(file, "#!/bin/sh\nsleep 14\nmkdir -p build\nprintf '%%PDF-fake\\n' > build/resume.pdf\nexit 0\n");
   fs.chmodSync(file, 0o755);
 }
 
@@ -138,6 +138,12 @@ async function testDebugServerSurvivesLongRender() {
     assert.match(page.body, /\*\*\* 分割线上下间距（em）/);
     assert.match(page.body, /id="quickNameSize"/);
     assert.match(page.body, /id="quickContactSize"/);
+    assert.match(page.body, /id="quickBodySize"/);
+    assert.match(page.body, /id="quickSectionSize"/);
+    assert.match(page.body, /id="quickEntrySize"/);
+    assert.match(page.body, /三级标题字号（pt）/);
+    assert.match(page.body, /id="quickSectionLine"/);
+    assert.match(page.body, /二级标题框高（pt）/);
     assert.match(page.body, /id="quickNameMarginTop"/);
     assert.match(page.body, /id="quickNameMarginBottom"/);
     assert.match(page.body, /id="quickContactMarginTop"/);
@@ -182,6 +188,8 @@ async function testDebugServerSurvivesLongRender() {
       timeout: 25000
     });
     assert.strictEqual(render.statusCode, 200, render.body);
+    assert.ok(fs.existsSync(path.join(tempDir, "build", "resume.pdf")), "latexmk output should remain in build");
+    assert.ok(fs.existsSync(path.join(tempDir, "resume.pdf")), "final PDF should be copied to the configured destination");
     await new Promise((resolve) => setTimeout(resolve, 4000));
     const ping = await requestJson(`http://127.0.0.1:${port}/api/ping`, { method: "POST", timeout: 3000 });
     assert.strictEqual(ping.statusCode, 200);

@@ -407,6 +407,7 @@ function pdfCommand(args) {
   const result = buildCommand(buildArgs);
   const pdf = path.resolve(cwd, args.pdf || config.pdf || defaultPdfOutput(input));
   const outDir = path.dirname(result.output);
+  const generated = path.join(outDir, `${path.basename(result.output, ".tex")}.pdf`);
   fs.mkdirSync(path.dirname(pdf), { recursive: true });
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -439,9 +440,11 @@ function pdfCommand(args) {
     throw error;
   }
 
-  const generated = path.join(outDir, `${path.basename(result.output, ".tex")}.pdf`);
-  if (generated !== pdf && fs.existsSync(generated)) {
-    fs.renameSync(generated, pdf);
+  if (!fs.existsSync(generated)) {
+    throw new Error(`PDF generation reported success but did not create ${path.relative(cwd, generated)}.`);
+  }
+  if (generated !== pdf) {
+    fs.copyFileSync(generated, pdf);
   }
   if (!args.silent) {
     console.log(`Generated ${path.relative(cwd, pdf)}`);
@@ -1399,12 +1402,11 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">中文字体</span><select id="quickFont"></select></span>
             <span class="menuItem"><span class="menuIcon">英文字体</span><select id="quickEnFont"></select></span>
-            <span class="menuItem"><span class="menuIcon">字号（pt）</span><select id="sizeLevel">
-              <option value="body">正文/列表</option>
-              <option value="section">二级标题</option>
-              <option value="entry">三级标题</option>
-            </select><input id="quickSize" placeholder="11.2" style="width:54px;"></span>
-            <span class="menuItem"><span class="menuIcon">行高（pt）</span><input id="quickLine" placeholder="14.5"></span>
+            <span class="menuItem"><span class="menuIcon">正文字号（pt）</span><input id="quickBodySize" placeholder="11.2" style="width:54px;"></span>
+            <span class="menuItem"><span class="menuIcon">二级标题字号（pt）</span><input id="quickSectionSize" placeholder="12.1" style="width:54px;"></span>
+            <span class="menuItem"><span class="menuIcon">三级标题字号（pt）</span><input id="quickEntrySize" placeholder="10.5" style="width:54px;"></span>
+            <span class="menuItem"><span class="menuIcon">正文行高（pt）</span><input id="quickLine" placeholder="14.5"></span>
+            <span class="menuItem"><span class="menuIcon">二级标题框高（pt）</span><input id="quickSectionLine" placeholder="14.2"></span>
             <span class="menuItem"><span class="menuIcon">对齐方式</span><select id="alignTypeSelect">
               <option value="center">居中</option>
               <option value="left">左对齐</option>
@@ -1514,9 +1516,11 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
     const importCurrentConfig = document.getElementById("importCurrentConfig");
     const quickFont = document.getElementById("quickFont");
     const quickEnFont = document.getElementById("quickEnFont");
-    const quickSize = document.getElementById("quickSize");
-    const sizeLevel = document.getElementById("sizeLevel");
+    const quickBodySize = document.getElementById("quickBodySize");
+    const quickSectionSize = document.getElementById("quickSectionSize");
+    const quickEntrySize = document.getElementById("quickEntrySize");
     const quickLine = document.getElementById("quickLine");
+    const quickSectionLine = document.getElementById("quickSectionLine");
     const quickNameSize = document.getElementById("quickNameSize");
     const quickNameLine = document.getElementById("quickNameLine");
     const quickContactSize = document.getElementById("quickContactSize");
@@ -1785,8 +1789,11 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
       fillSelect(quickSectionStyle, sectionStyleOptions, getPath(currentConfig, "theme.options.sectionStyle") || "classic");
       fillSelect(quickFont, fontOptions.map(([value, label]) => [value, label]), getPath(currentConfig, "theme.fonts.omrCJKMainFont"));
       fillSelect(quickEnFont, enFontOptions, getPath(currentConfig, "theme.fonts.omrBodyFont"));
-      renderSizeInput();
+      quickBodySize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrBodyFontSize"));
+      quickSectionSize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrSectionFontSize"));
+      quickEntrySize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrEntryFontSize"));
       quickLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrBodyLineHeight"));
+      quickSectionLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrSectionLineHeight"));
       quickNameSize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrNameFontSize"));
       quickNameLine.value = extractNumber(getPath(currentConfig, "theme.sizes.omrNameLineHeight"));
       quickContactSize.value = extractNumber(getPath(currentConfig, "theme.sizes.omrContactFontSize"));
@@ -2005,8 +2012,11 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       setPath(currentConfig, "theme.options.sectionStyle", quickSectionStyle.value);
       setPath(currentConfig, "theme.fonts.omrCJKMainFont", quickFont.value);
       setPath(currentConfig, "theme.fonts.omrBodyFont", quickEnFont.value);
-      setPath(currentConfig, "theme.sizes.omr" + ({body:"Body",section:"Section",entry:"Entry"})[sizeLevel.value] + "FontSize", quickSize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrBodyFontSize", quickBodySize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrSectionFontSize", quickSectionSize.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrEntryFontSize", quickEntrySize.value + "pt");
       setPath(currentConfig, "theme.sizes.omrBodyLineHeight", quickLine.value + "pt");
+      setPath(currentConfig, "theme.sizes.omrSectionLineHeight", quickSectionLine.value + "pt");
       setPath(currentConfig, "theme.sizes.omrNameFontSize", quickNameSize.value + "pt");
       setPath(currentConfig, "theme.sizes.omrNameLineHeight", quickNameLine.value + "pt");
       setPath(currentConfig, "theme.sizes.omrContactFontSize", quickContactSize.value + "pt");
@@ -2176,13 +2186,11 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     quickSectionStyle.addEventListener("change", applyQuickConfig);
     quickFont.addEventListener("change", applyQuickConfig);
     quickEnFont.addEventListener("change", applyQuickConfig);
-    function renderSizeInput() {
-      const map = { body: "omrBodyFontSize", section: "omrSectionFontSize", entry: "omrEntryFontSize" };
-      quickSize.value = extractNumber(getPath(currentConfig, "theme.sizes." + map[sizeLevel.value]));
-    }
-    sizeLevel.addEventListener("change", renderSizeInput);
-    quickSize.addEventListener("input", applyQuickConfig);
+    quickBodySize.addEventListener("input", applyQuickConfig);
+    quickSectionSize.addEventListener("input", applyQuickConfig);
+    quickEntrySize.addEventListener("input", applyQuickConfig);
     quickLine.addEventListener("input", applyQuickConfig);
+    quickSectionLine.addEventListener("input", applyQuickConfig);
     quickNameSize.addEventListener("input", applyQuickConfig);
     quickNameLine.addEventListener("input", applyQuickConfig);
     quickContactSize.addEventListener("input", applyQuickConfig);
