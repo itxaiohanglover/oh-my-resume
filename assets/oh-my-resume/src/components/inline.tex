@@ -1,5 +1,7 @@
 \newcommand{\omrStrong}[1]{\textbf{#1}}
 \newcommand{\omrInlineLogo}[1]{\raisebox{-0.14\height}{\includegraphics[height=\omrInlineLogoHeight,keepaspectratio]{#1}}\hspace{0.12em}}
+\newcommand{\omrInlineColor}[2]{\begingroup\setlength{\fboxsep}{0.14em}\ifthenelse{\equal{#1}{gray}}{\colorbox{omrColorGrayBg}{#2}}{\ifthenelse{\equal{#1}{pink}}{\colorbox{omrColorPinkBg}{#2}}{\colorbox{omrColorBlueBg}{#2}}}\endgroup}
+\newcommand{\omrInlineColorRgb}[2]{\begingroup\definecolor{omrInlineCustomColor}{RGB}{#1}\setlength{\fboxsep}{0.14em}\colorbox{omrInlineCustomColor}{#2}\endgroup}
 \newcommand{\omrCenter}[1]{{\centering #1\par}}
 \newcommand{\omrLeft}[1]{{\raggedright #1\par}}
 \newcommand{\omrRight}[1]{{\raggedleft #1\par}}

@@ -1441,11 +1441,11 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
           </div>
           <div class="settingsRow">
             <span class="menuItem"><span class="menuIcon">彩色条标签</span><span class="logoLibrary" id="colorPresetList">
-              <button class="logoChip colorPresetChip" type="button" data-color="gray" title="&lt;color color=&quot;gray&quot;&gt;...&lt;/color&gt;">灰色</button>
-              <button class="logoChip colorPresetChip" type="button" data-color="pink" title="&lt;color color=&quot;pink&quot;&gt;...&lt;/color&gt;">粉色</button>
-              <button class="logoChip colorPresetChip" type="button" data-color="blue" title="&lt;color color=&quot;blue&quot;&gt;...&lt;/color&gt;">蓝色</button>
+              <button class="logoChip colorPresetChip" type="button" data-color="gray" title="&lt;color=&quot;gray&quot;&gt;...&lt;/color&gt;">灰色</button>
+              <button class="logoChip colorPresetChip" type="button" data-color="pink" title="&lt;color=&quot;pink&quot;&gt;...&lt;/color&gt;">粉色</button>
+              <button class="logoChip colorPresetChip" type="button" data-color="blue" title="&lt;color=&quot;blue&quot;&gt;...&lt;/color&gt;">蓝色</button>
             </span></span>
-            <span style="font-size:11px;color:var(--muted);">选中标题文本后点击，即自动包裹为 <code>&lt;color color=&quot;…&quot;&gt;</code></span>
+            <span style="font-size:11px;color:var(--muted);">选中文本后点击，即自动包裹为 <code>&lt;color=&quot;…&quot;&gt;</code></span>
           </div>
         </section>
         <section class="settingsSection">
@@ -1963,12 +1963,12 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
       for (const button of colorPresetList.querySelectorAll(".colorPresetChip")) {
         const color = button.dataset.color;
         button.style.background = "rgb(" + (getPath(currentConfig, paths[color]) || "243,244,246") + ")";
-        button.title = '<color color="' + color + '">...</color>';
+        button.title = '<color="' + color + '">...</color>';
         if (button.dataset.bound === "true") continue;
         button.dataset.bound = "true";
         button.addEventListener("click", () => {
           const selected = editor.value.slice(editor.selectionStart, editor.selectionEnd) || "请在此填写经历标题";
-          insertAtCursor('<color color="' + color + '">' + selected + "</color>");
+          insertAtCursor('<color="' + color + '">' + selected + "</color>");
           message.className = "";
           message.textContent = "已插入 " + labels[color] + "彩色条标签";
         });
