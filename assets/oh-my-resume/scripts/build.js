@@ -122,6 +122,17 @@ function parseInlineLogo(value, index) {
   };
 }
 
+function parseInlineColor(value, index) {
+  if (!value.slice(index).toLowerCase().startsWith("<color")) return null;
+  const match = value.slice(index).match(/^<color(?:\s+color)?\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))\s*>([\s\S]*?)<\/color>/i);
+  if (!match) return null;
+  return {
+    length: match[0].length,
+    color: parseColorValue(match[1] || match[2] || match[3]),
+    content: match[4]
+  };
+}
+
 let alignTags = {
   centerOpen: "<center>", centerClose: "</center>",
   leftOpen: "<left>", leftClose: "</left>",
@@ -321,9 +332,8 @@ function parseEntryHeading(value, tagOpts = {}) {
 
   // A coloured entry bar may wrap the complete heading, including <right>.
   // Keep this extraction before alignment parsing so the date remains dated.
-  title = title.replace(/<color\b([^>]*)>([\s\S]*?)<\/color>/i, (_, attributes, content) => {
-    const match = String(attributes).match(/\b(?:color|tone|type)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i);
-    color = parseColorValue(match ? (match[1] || match[2] || match[3]) : "blue");
+  title = title.replace(/<color(?:\s+color)?\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))\s*>([\s\S]*?)<\/color>/i, (_, quoted, singleQuoted, bare, content) => {
+    color = parseColorValue(quoted || singleQuoted || bare);
     return content;
   });
 
@@ -448,6 +458,14 @@ function inline(text) {
   const value = String(text);
 
   while (i < value.length) {
+    const colorTag = parseInlineColor(value, i);
+    if (colorTag) {
+      const command = colorTag.color.type === "rgb" ? "\\omrInlineColorRgb" : "\\omrInlineColor";
+      result += `${command}{${colorTag.color.value}}{${inline(colorTag.content)}}`;
+      i += colorTag.length;
+      continue;
+    }
+
     const logoTag = parseInlineLogo(value, i);
     if (logoTag) {
       const logo = resolveInlineLogo(logoTag.key, logoTag.source);
@@ -539,6 +557,15 @@ function inlineHtml(text) {
   const value = String(text);
 
   while (i < value.length) {
+    const colorTag = parseInlineColor(value, i);
+    if (colorTag) {
+      const className = colorTag.color.type === "named" ? ` inlineColor-${colorTag.color.value}` : "";
+      const style = colorTag.color.type === "rgb" ? ` style="background:rgb(${colorTag.color.value})"` : "";
+      result += `<span class="inlineColor${className}"${style}>${inlineHtml(colorTag.content)}</span>`;
+      i += colorTag.length;
+      continue;
+    }
+
     const logoTag = parseInlineLogo(value, i);
     if (logoTag) {
       const logo = resolveInlineLogo(logoTag.key, logoTag.source);
@@ -1047,6 +1074,10 @@ function renderHtmlDocument(meta, sections, options = {}) {
     .divider { height: 0; margin: ${tokens.lengths.dividerGap} 0; border: 0; border-top: 0.55pt solid #666b73; }
     .tag { display: inline-flex; align-items: center; margin-left: 0.34em; padding: 0 0.34em; border-radius: 3px; background: ${tokens.colors.tagBg}; color: ${tokens.colors.accent}; font-size: 1em; line-height: 1.12; font-weight: 700; vertical-align: baseline; }
     .inlineLogo { display: inline-block; width: auto; height: ${tokens.lengths.inlineLogoHeight}; margin-right: 0.12em; object-fit: contain; vertical-align: -0.14em; }
+    .inlineColor { padding: 0 0.14em; }
+    .inlineColor-gray { background: ${tokens.colors.colorGrayBg}; }
+    .inlineColor-pink { background: ${tokens.colors.colorPinkBg}; }
+    .inlineColor-blue { background: ${tokens.colors.colorBlueBg}; }
     @media screen { .page { box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18); } }
     @media print { body { background: white; } .page { width: auto; min-height: auto; margin: 0; padding: 0; box-shadow: none; } }
   </style>
