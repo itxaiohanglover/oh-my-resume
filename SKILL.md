@@ -79,6 +79,7 @@ Supported Markdown:
 - `**bold**`, `` `tag` ``, and Markdown links
 - `***` on its own line renders a gray divider between content blocks
 - inline company logos with `<logo>alibaba</logo>`
+- coloured experience bars with `<color color="blue">...</color>`; `color` accepts configured `gray`, `pink`, `blue`, or a direct `#RRGGBB` / `R,G,B` value
 - header school logos through the `schoolLogo` frontmatter field
 
 Built-in logo keys are `alibaba`, `alibaba-cloud`, `bytedance`, `baidu`,
@@ -213,6 +214,10 @@ Use `omr.config.json` for simple theme overrides:
   }
 }
 ```
+
+The named `<color color="gray|pink|blue">` backgrounds are configurable through `theme.colors`:
+`omrColorGrayBg`, `omrColorPinkBg`, and `omrColorBlueBg`. Text and dates keep
+the same colours as ordinary experience entries.
 
 Use a custom LaTeX theme only when needed:
 

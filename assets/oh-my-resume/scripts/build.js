@@ -245,6 +245,7 @@ function parseMarkdown(markdown, options = {}) {
         tags: parsedHeading.tags,
         center: parsedHeading.center,
         left: parsedHeading.left,
+        color: parsedHeading.color,
         fields: [],
         bullets: [],
         paragraphs: []
@@ -316,6 +317,15 @@ function parseEntryHeading(value, tagOpts = {}) {
   const tags = [];
   let center = "";
   let left = "";
+  let color = null;
+
+  // A coloured entry bar may wrap the complete heading, including <right>.
+  // Keep this extraction before alignment parsing so the date remains dated.
+  title = title.replace(/<color\b([^>]*)>([\s\S]*?)<\/color>/i, (_, attributes, content) => {
+    const match = String(attributes).match(/\b(?:color|tone|type)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i);
+    color = parseColorValue(match ? (match[1] || match[2] || match[3]) : "blue");
+    return content;
+  });
 
   // Extract left block
   title = title.replace(rxLT, (_, content) => {
@@ -354,8 +364,24 @@ function parseEntryHeading(value, tagOpts = {}) {
     date,
     tags,
     center: center ? { text: center, tags: centerTags } : null,
-    left: left || null
+    left: left || null,
+    color
   };
+}
+
+function parseColorValue(value) {
+  const raw = String(value || "blue").trim().toLowerCase();
+  const named = { gray: "gray", grey: "gray", pink: "pink", blue: "blue" };
+  if (named[raw]) return { type: "named", value: named[raw] };
+  const hex = raw.match(/^#?([0-9a-f]{6})$/i);
+  if (hex) {
+    const hexValue = hex[1];
+    return { type: "rgb", value: [hexValue.slice(0, 2), hexValue.slice(2, 4), hexValue.slice(4, 6)].map((part) => String(parseInt(part, 16))).join(",") };
+  }
+  if (/^\d{1,3},\d{1,3},\d{1,3}$/.test(raw) && raw.split(",").every((part) => Number(part) <= 255)) {
+    return { type: "rgb", value: raw };
+  }
+  throw new Error(`Unsupported color value: ${value}. Use blue, gray, pink, #RRGGBB, or R,G,B.`);
 }
 
 function normalizeFieldName(value) {
@@ -621,7 +647,10 @@ function renderEntry(entry) {
   const date = entry.date ? `\\tightdate{${inline(entry.date)}}` : "";
   const parts = [];
 
-  if (entry.left && entry.center) {
+  if (entry.color) {
+    const command = entry.color.type === "rgb" ? "\\omrColoredDatedEntryRgb" : "\\omrColoredDatedEntry";
+    parts.push(`${command}{${entry.color.value}}{${title}}{${date}}`);
+  } else if (entry.left && entry.center) {
     const cTags = (entry.center.tags || []).map((tag) => `~\\tagbox{${inline(tag)}}`).join("");
     const cText = `${inline(entry.center.text)}${cTags}`;
     parts.push(`\\datedsubsectionLC{${title}}{${inline(entry.left)}}{${cText}}{${date}}`);
@@ -803,6 +832,9 @@ function htmlStyleTokens(config = {}) {
       tagBg: rgbCss(tagBg),
       sectionBg: rgbCss(sectionBg),
       classicBg: rgbCss(cssValue(config, "colors", "omrClassicBg", "242,242,242")),
+      colorGrayBg: rgbCss(cssValue(config, "colors", "omrColorGrayBg", "243,244,246")),
+      colorPinkBg: rgbCss(cssValue(config, "colors", "omrColorPinkBg", "255,239,239")),
+      colorBlueBg: rgbCss(cssValue(config, "colors", "omrColorBlueBg", "232,241,255")),
       muted: "#4b5563",
       text: "#111827"
     },
@@ -884,7 +916,10 @@ function renderEntryHtml(entry) {
   const center = entry.center
     ? `<div class="entryCenter">${inlineHtml(entry.center.text)} ${(entry.center.tags || []).map((tag) => `<span class="tag">${inlineHtml(tag)}</span>`).join("")}</div>`
     : "";
-  return `<article class="entry">
+  const colorClass = entry.color && entry.color.type === "named" ? ` color-${entry.color.value}` : "";
+  const colorStyle = entry.color && entry.color.type === "rgb" ? ` style="background:rgb(${entry.color.value})"` : "";
+  const colorWrapper = entry.color ? " colorEntry" : "";
+  return `<article class="entry${colorWrapper}${colorClass}"${colorStyle}>
   <div class="entryHead">
     ${leftBlock}
     <h3>${inlineHtml(entry.title)}${tags}</h3>
@@ -995,6 +1030,9 @@ function renderHtmlDocument(meta, sections, options = {}) {
     h3 { margin: 0; font-size: ${tokens.sizes.entry}; line-height: ${tokens.sizes.entryLine}; font-weight: 800; }
     h4 { margin: ${tokens.lengths.hFourBefore} 0 ${tokens.lengths.hFourAfter}; font-size: ${tokens.sizes.hFour}; line-height: ${tokens.sizes.hFourLine}; font-weight: 800; }
     .entry { margin: ${tokens.lengths.entryBefore} 0 ${tokens.lengths.entryAfter}; }
+    .color-gray { background: ${tokens.colors.colorGrayBg}; }
+    .color-pink { background: ${tokens.colors.colorPinkBg}; }
+    .color-blue { background: ${tokens.colors.colorBlueBg}; }
     .entryHead { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
     right { flex: 0 0 ${tokens.lengths.entryDateWidth}; text-align: right; white-space: nowrap; color: ${tokens.colors.muted}; }
     left { color: ${tokens.colors.muted}; }

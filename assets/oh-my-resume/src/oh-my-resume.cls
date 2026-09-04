@@ -45,6 +45,9 @@
 \definecolor{omrClassicBg}{RGB}{242,242,242}
 \definecolor{omrTextMuted}{RGB}{75,85,99}
 \definecolor{omrLinkColor}{RGB}{40,88,160}
+\definecolor{omrColorGrayBg}{RGB}{243,244,246}
+\definecolor{omrColorPinkBg}{RGB}{255,239,239}
+\definecolor{omrColorBlueBg}{RGB}{232,241,255}
 
 \newcommand{\omrPageMarginLeft}{8mm}
 \newcommand{\omrPageMarginRight}{8mm}

@@ -1415,6 +1415,19 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
             <span class="menuItem"><span class="menuIcon">标签文字</span><input type="color" id="quickTagText" value="#2563eb" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
             <span class="menuItem"><span class="menuIcon">标题样式</span><input type="color" id="quickSectionBg" value="#1f2937" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
           </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">彩色条 · 灰</span><input type="color" id="quickColorGrayBg" value="#f3f4f6" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">彩色条 · 粉</span><input type="color" id="quickColorPinkBg" value="#ffefef" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+            <span class="menuItem"><span class="menuIcon">彩色条 · 蓝</span><input type="color" id="quickColorBlueBg" value="#e8f1ff" style="width:24px;height:24px;border:0;cursor:pointer;background:transparent;padding:0;"></span>
+          </div>
+          <div class="settingsRow">
+            <span class="menuItem"><span class="menuIcon">彩色条标签</span><span class="logoLibrary" id="colorPresetList">
+              <button class="logoChip colorPresetChip" type="button" data-color="gray" title="&lt;color color=&quot;gray&quot;&gt;...&lt;/color&gt;">灰色</button>
+              <button class="logoChip colorPresetChip" type="button" data-color="pink" title="&lt;color color=&quot;pink&quot;&gt;...&lt;/color&gt;">粉色</button>
+              <button class="logoChip colorPresetChip" type="button" data-color="blue" title="&lt;color color=&quot;blue&quot;&gt;...&lt;/color&gt;">蓝色</button>
+            </span></span>
+            <span style="font-size:11px;color:var(--muted);">选中标题文本后点击，即自动包裹为 <code>&lt;color color=&quot;…&quot;&gt;</code></span>
+          </div>
         </section>
         <section class="settingsSection">
           <p class="settingsTitle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>图片</p>
@@ -1516,6 +1529,10 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
     const quickTagText = document.getElementById("quickTagText");
     const quickSectionBg = document.getElementById("quickSectionBg");
     const quickLinkColor = document.getElementById("quickLinkColor");
+    const quickColorGrayBg = document.getElementById("quickColorGrayBg");
+    const quickColorPinkBg = document.getElementById("quickColorPinkBg");
+    const quickColorBlueBg = document.getElementById("quickColorBlueBg");
+    const colorPresetList = document.getElementById("colorPresetList");
     const alignTypeSelect = document.getElementById("alignTypeSelect");
     const alignOpen = document.getElementById("alignOpen");
     const alignClose = document.getElementById("alignClose");
@@ -1603,6 +1620,7 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
       renderQuickControls();
       renderLogoLibrary();
       renderSchoolLogoLibrary();
+      renderColorPresetLibrary();
       captureAlignTags();
       paths.textContent = state.input + " -> " + state.pdf;
       engineSelect.value = state.engine === "html" ? "html" : "latex";
@@ -1781,6 +1799,9 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
       quickTagText.value = rgbToHex(getPath(currentConfig, "theme.colors.omrTagText"));
       quickSectionBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrSectionBg"));
       quickLinkColor.value = rgbToHex(getPath(currentConfig, "theme.colors.omrLinkColor"));
+      quickColorGrayBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrColorGrayBg") || "243,244,246");
+      quickColorPinkBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrColorPinkBg") || "255,239,239");
+      quickColorBlueBg.value = rgbToHex(getPath(currentConfig, "theme.colors.omrColorBlueBg") || "232,241,255");
       quickTheme.innerHTML = "";
       const activeColor = getPath(currentConfig, "theme.colors.omrTagText");
       for (const theme of themeOptions) {
@@ -1919,6 +1940,24 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
           saveConfigToServer();
         });
         customLogoList.append(button, remove);
+      }
+    }
+
+    function renderColorPresetLibrary() {
+      const labels = { gray: "灰色", pink: "粉色", blue: "蓝色" };
+      const paths = { gray: "theme.colors.omrColorGrayBg", pink: "theme.colors.omrColorPinkBg", blue: "theme.colors.omrColorBlueBg" };
+      for (const button of colorPresetList.querySelectorAll(".colorPresetChip")) {
+        const color = button.dataset.color;
+        button.style.background = "rgb(" + (getPath(currentConfig, paths[color]) || "243,244,246") + ")";
+        button.title = '<color color="' + color + '">...</color>';
+        if (button.dataset.bound === "true") continue;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => {
+          const selected = editor.value.slice(editor.selectionStart, editor.selectionEnd) || "请在此填写经历标题";
+          insertAtCursor('<color color="' + color + '">' + selected + "</color>");
+          message.className = "";
+          message.textContent = "已插入 " + labels[color] + "彩色条标签";
+        });
       }
     }
 
@@ -2253,6 +2292,9 @@ setPath(currentConfig, "theme.colors.omrTagBg", theme.tagBg);
     quickTagText.addEventListener("input", () => applyColorPick(quickTagText, "theme.colors.omrTagText"));
     quickSectionBg.addEventListener("input", () => applyColorPick(quickSectionBg, "theme.colors.omrSectionBg"));
     quickLinkColor.addEventListener("input", () => applyColorPick(quickLinkColor, "theme.colors.omrLinkColor"));
+    quickColorGrayBg.addEventListener("input", () => applyColorPick(quickColorGrayBg, "theme.colors.omrColorGrayBg"));
+    quickColorPinkBg.addEventListener("input", () => applyColorPick(quickColorPinkBg, "theme.colors.omrColorPinkBg"));
+    quickColorBlueBg.addEventListener("input", () => applyColorPick(quickColorBlueBg, "theme.colors.omrColorBlueBg"));
     let origAlignTags = {};
     function captureAlignTags() {
       for (const t of ["center","left","right"]) {

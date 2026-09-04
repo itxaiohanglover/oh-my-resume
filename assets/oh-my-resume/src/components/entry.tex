@@ -11,6 +11,34 @@
   \vspace{\omrEntryAfter}%
 }
 \newcommand{\datedsubsection}[2]{\omrDatedEntry{#1}{#2}}
+\newcommand{\omrColorEntryColors}[1]{%
+  \ifthenelse{\equal{#1}{gray}}{\def\omrColorEntryBg{omrColorGrayBg}}{%
+    \ifthenelse{\equal{#1}{pink}}{\def\omrColorEntryBg{omrColorPinkBg}}{%
+      \def\omrColorEntryBg{omrColorBlueBg}}}%
+}
+\newcommand{\omrColoredDatedEntry}[3]{%
+  \omrColorEntryColors{#1}%
+  \omrColoredDatedEntryWithBg{\omrColorEntryBg}{#2}{#3}%
+}
+\newcommand{\omrColoredDatedEntryRgb}[3]{%
+  \begingroup\definecolor{omrColorEntryCustomBg}{RGB}{#1}%
+  \omrColoredDatedEntryWithBg{omrColorEntryCustomBg}{#2}{#3}%
+  \endgroup
+}
+\newcommand{\omrColoredDatedEntryWithBg}[3]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{#1}{\makebox[\linewidth][l]{%
+    \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{\bfseries #2}%
+    \hfill
+    \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#3}%
+  }}\par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\datedsubsectionC}[3]{%
   \vspace{\omrEntryBefore}%
   \noindent
