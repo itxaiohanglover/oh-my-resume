@@ -8,6 +8,11 @@
   \ClassError{oh-my-resume}{Oh My Resume requires XeLaTeX}{Use xelatex or latexmk -xelatex to build this resume.}
 \fi
 
+% Force driver at load time: geometry v6.0 defers driver detection to
+% \begin{document}, which is AFTER \omrApplyLayout's \newgeometry call.
+% Without a known driver the a4paper option is lost and the layout falls
+% back to article's default letterpaper (observed: \paperwidth=614.295pt).
+\PassOptionsToPackage{driver=xetex}{geometry}
 \RequirePackage[a4paper, nohead, nofoot]{geometry}
 \RequirePackage{fontspec}
 \RequirePackage{xeCJK}
@@ -91,7 +96,11 @@
 \newcommand{\sectionStyle}{classic}
 
 \newcommand{\omrApplyLayout}{%
-  \newgeometry{
+  % NOTE: this macro is invoked in the preamble (before \begin{document}).
+  % geometry v6.0's \newgeometry resets the paper size to the class default
+  % (letterpaper) when called in the preamble, silently discarding a4paper.
+  % \geometry in the preamble merges options instead, preserving a4paper.
+  \geometry{
     left=\omrPageMarginLeft,
     right=\omrPageMarginRight,
     top=\omrPageMarginTop,
