@@ -991,6 +991,25 @@ function openBrowser(url) {
 }
 
 function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
+  const cjkFontOptions = process.platform === "win32"
+    ? [
+        ["SimSun", "宋体"],
+        ["KaiTi", "楷体"],
+        ["Microsoft YaHei", "微软雅黑"],
+        ["Noto Serif CJK SC", "Noto Serif"]
+      ]
+    : process.platform === "darwin"
+      ? [
+          ["Songti SC", "宋体"],
+          ["Kaiti SC", "楷体"],
+          ["PingFang SC", "苹方"],
+          ["Noto Serif CJK SC", "Noto Serif"]
+        ]
+      : [
+          ["FandolSong-Regular", "宋体"],
+          ["FandolKai-Regular", "楷体"],
+          ["Noto Serif CJK SC", "Noto Serif"]
+        ];
   const builtInLogoButtons = builtInLogos.map((logo) => `
             <button class="logoChip builtinLogoChip" type="button" data-logo-id="${escapeHtml(logo.id)}" title="&lt;logo&gt;${escapeHtml(logo.id)}&lt;/logo&gt;">
               <img src="${escapeHtml(logo.url)}" alt=""><span>${escapeHtml(logo.label)}</span>
@@ -1561,12 +1580,7 @@ function debugHtml(fileName, builtInLogos = [], builtInSchoolLogos = []) {
       ["refined", "雅致"],
       ["professional", "专业"]
     ];
-    const fontOptions = [
-      ["Songti SC", "宋体"],
-      ["Kaiti SC", "楷体"],
-      ["PingFang SC", "苹方"],
-      ["Noto Serif CJK SC", "Noto Serif"]
-    ];
+    const fontOptions = ${JSON.stringify(cjkFontOptions)};
     const enFontOptions = [
       ["TeX Gyre Termes", "TeX Gyre Termes"],
       ["Times New Roman", "Times New Roman"],

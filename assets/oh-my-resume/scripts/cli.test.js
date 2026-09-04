@@ -144,6 +144,15 @@ async function testDebugServerSurvivesLongRender() {
     assert.match(page.body, /id="quickContactMarginBottom"/);
     assert.match(page.body, /id="quickLogoMarginTop"/);
     assert.match(page.body, /id="quickLogoMarginBottom"/);
+    const expectedKaitiFont = process.platform === "win32"
+      ? "KaiTi"
+      : process.platform === "darwin"
+        ? "Kaiti SC"
+        : "FandolKai-Regular";
+    assert.ok(
+      page.body.includes(JSON.stringify([expectedKaitiFont, "楷体"])),
+      `debug page should map 楷体 to ${expectedKaitiFont} on ${process.platform}`
+    );
     assert.match(page.body, /id="exportCurrentConfig"/);
     assert.match(page.body, /id="importCurrentConfig"/);
     assert.match(page.body, /data-logo-id="uestc"/);
