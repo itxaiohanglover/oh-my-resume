@@ -128,6 +128,13 @@ async function testDebugServerSurvivesLongRender() {
     assert.match(page.body, /data-logo-id="trae"/);
     assert.match(page.body, /data-logo-id="github"/);
     assert.match(page.body, /id="quickDividerGap"/);
+    assert.match(page.body, /id="quickColorGrayBg"/);
+    assert.match(page.body, /id="quickColorPinkBg"/);
+    assert.match(page.body, /id="quickColorBlueBg"/);
+    assert.match(page.body, /id="colorPresetList"/);
+    assert.match(page.body, /data-color="gray"/);
+    assert.match(page.body, /data-color="pink"/);
+    assert.match(page.body, /data-color="blue"/);
     assert.match(page.body, /\*\*\* 分割线上下间距（em）/);
     assert.match(page.body, /id="quickNameSize"/);
     assert.match(page.body, /id="quickContactSize"/);
@@ -316,6 +323,32 @@ async function testAsteriskDividerSeparatesEntries() {
   assert.match(tex, /\\omrDivider/);
 }
 
+async function testColorEntryBarsSupportThreeConfigurableTones() {
+  const sections = parseMarkdown([
+    "## Experience",
+    "",
+    "### <color color=\"blue\">Blue entry <right>2026</right></color>",
+    "### <color color=\"pink\">Pink entry <right>2025</right></color>",
+    "### <color color='#f0f4ff'>Custom entry <right>2024</right></color>"
+  ].join("\n"));
+  assert.deepStrictEqual(sections[0].blocks.map((entry) => entry.color), [
+    { type: "named", value: "blue" }, { type: "named", value: "pink" }, { type: "rgb", value: "240,244,255" }
+  ]);
+
+  const theme = { colors: { omrColorPinkBg: "250,230,235" } };
+  const html = renderHtmlDocument({ name: "Colors" }, sections, { config: { theme } });
+  assert.match(html, /class="entry colorEntry color-blue"/);
+  assert.match(html, /class="entry colorEntry color-pink"/);
+  assert.match(html, /class="entry colorEntry" style="background:rgb\(240,244,255\)"/);
+  assert.match(html, /\.color-pink \{ background: rgb\(250,230,235\); \}/);
+
+  const tex = renderDocument({ name: "Colors" }, sections, { themeOverrides: theme });
+  assert.match(tex, /\\omrColoredDatedEntry\{blue\}/);
+  assert.match(tex, /\\omrColoredDatedEntry\{pink\}/);
+  assert.match(tex, /\\omrColoredDatedEntryRgb\{240,244,255\}/);
+  assert.match(tex, /\\definecolor\{omrColorPinkBg\}\{RGB\}\{250,230,235\}/);
+}
+
 async function testInlineLogosRenderBuiltInAndCustomAssets() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omr-logo-test-"));
   fs.writeFileSync(path.join(tempDir, "company.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
@@ -444,6 +477,7 @@ async function main() {
   await testNestedBulletsPreserveMarkdownIndentation();
   await testParagraphLinksAreNotParsedAsFields();
   await testAsteriskDividerSeparatesEntries();
+  await testColorEntryBarsSupportThreeConfigurableTones();
   await testInlineLogosRenderBuiltInAndCustomAssets();
   await testSchoolLogosSupportPresetTagAndPaths();
   await testHtmlPdfBrowserCanUseExplicitPath();

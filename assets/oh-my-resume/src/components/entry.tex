@@ -1,5 +1,88 @@
-\newcommand{\omrDatedEntry}[2]{\subsection*{{\fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont #1 \hfill {\color{omrTextMuted}#2}}}}
+\newcommand{\omrDatedEntry}[2]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{\bfseries #1}%
+  \hfill
+  \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#2}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\datedsubsection}[2]{\omrDatedEntry{#1}{#2}}
+\newcommand{\omrColorEntryColors}[1]{%
+  \ifthenelse{\equal{#1}{gray}}{\def\omrColorEntryBg{omrColorGrayBg}}{%
+    \ifthenelse{\equal{#1}{pink}}{\def\omrColorEntryBg{omrColorPinkBg}}{%
+      \def\omrColorEntryBg{omrColorBlueBg}}}%
+}
+\newcommand{\omrColoredDatedEntry}[3]{%
+  \omrColorEntryColors{#1}%
+  \omrColoredDatedEntryWithBg{\omrColorEntryBg}{#2}{#3}%
+}
+\newcommand{\omrColoredDatedEntryRgb}[3]{%
+  \begingroup\definecolor{omrColorEntryCustomBg}{RGB}{#1}%
+  \omrColoredDatedEntryWithBg{omrColorEntryCustomBg}{#2}{#3}%
+  \endgroup
+}
+\newcommand{\omrColoredDatedEntryWithBg}[3]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{#1}{\makebox[\linewidth][l]{%
+    \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{\bfseries #2}%
+    \hfill
+    \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#3}%
+  }}\par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
+\newcommand{\datedsubsectionC}[3]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \rlap{\bfseries #1\hspace{1em}}%
+  \hfill
+  \makebox[0pt][c]{\bfseries #2}%
+  \hfill
+  \llap{\hspace{1em}\normalfont\color{omrTextMuted}#3}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
+\newcommand{\datedsubsectionL}[3]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{%
+    \normalfont\color{omrTextMuted}#2\hspace{0.5em}{\bfseries #1}%
+  }%
+  \hfill
+  \makebox[\omrEntryDateWidth][r]{\normalfont\color{omrTextMuted}#3}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
+\newcommand{\datedsubsectionLC}[4]{%
+  \vspace{\omrEntryBefore}%
+  \noindent
+  \begingroup
+  \fontsize{\omrEntryFontSize}{\omrEntryLineHeight}\selectfont
+  \makebox[\dimexpr\linewidth-\omrEntryDateWidth-1em\relax][l]{%
+    \normalfont\color{omrTextMuted}#2\hspace{0.5em}{\bfseries #1}%
+  }%
+  \hfill
+  \makebox[0pt][c]{\bfseries #3}%
+  \hfill
+  \llap{\hspace{1em}\normalfont\color{omrTextMuted}#4}%
+  \par
+  \endgroup
+  \vspace{\omrEntryAfter}%
+}
 \newcommand{\tightdate}[1]{{\xeCJKsetup{CJKecglue={\hskip 0pt}}#1}}
 \newcommand{\omrFieldLine}[2]{{\par \color{omrTextMuted}{#1：#2}\vspace{0.15em}}}
 \newcommand{\fieldline}[2]{\omrFieldLine{#1}{#2}}

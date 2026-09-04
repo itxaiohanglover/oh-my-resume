@@ -1,25 +1,73 @@
-# Oh My Resume
+<p align="center">
+  <img src="assets/oh-my-resume-logo.png" width="150px" alt="Oh My Resume" />
+</p>
 
-![Oh My Resume logo](assets/logo.svg)
 
-Oh My Resume is a Skill-first Markdown resume generator. Install the repository as a Codex or Claude Code Skill, edit a Markdown resume, and export a polished same-name PDF.
+<h1 align="center">Oh My Resume</h1>
 
-Write Markdown on the left, render a TeX-quality PDF on the right, and keep the source document simple enough to edit like a normal note.
+>  一个 Skill-first 的 Markdown 简历引擎——让职业经历像代码一样可读、可改、可追踪。
+
+<p align="center">
+  <a href="./README-EN.md"><img src="https://img.shields.io/badge/English-blue" alt="English"></a>&nbsp;
+  <a href="./README.md"><img src="https://img.shields.io/badge/中文-red" alt="中文"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>&nbsp;
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+</p>
 
 ![Oh My Resume example](assets/example.png)
 
-It is designed for users who want to focus on content:
+请将下方提示词复制给你的 Agent，实现一键安装与配置：
 
-- Markdown is the source of truth.
-- PDF output is generated in the same folder.
-- LaTeX files and logs stay under `build/`.
-- A browser debug mode provides Markdown editing, PDF preview, and style controls.
+> Clone and set up https://github.com/open-agent-power/oh-my-resume, then help me create my resume PDF.
 
-## Install
+---
+一份真正有价值的简历，不是一张一次生成的 PDF。它是一份持续演进的职业记录，承载着个人经历、判断、选择与成长。
 
-Install this repository as a Skill in Codex or Claude Code, then restart the agent if your tool requires it.
+长期维护一份简历，需要三个核心能力：
 
-The repository root is the Skill folder:
+- **上下文（Context）** —— 理解经历背后的价值。
+  一个项目不只是技术栈的罗列，而是围绕问题、决策、挑战与成果展开的完整叙事。
+
+- **迭代（Iteration）** —— 在持续优化中不断完善。
+  优秀的简历并非一次完成，而是在反馈、修改与重构中逐渐形成。
+
+- **掌控（Ownership）** —— 保持对职业数据的自主权。
+  经历不应被限制在某个平台或模板中，而应始终保持可读、可改、可追踪、可复用。
+
+Oh My Resume 围绕这三个核心理念构建：
+
+**Context（理解经历） · Iteration（持续演进） · Ownership（自主掌控）**
+
+在此基础上，**Agent 作为智能协作者**，参与简历构建的全过程，从内容组织、表达优化到格式生成，帮助将个人经历转化为高质量的职业叙事。
+
+
+<p align="center">
+  <em> Windows 下的工作流演示</em><br/>
+  <img src="assets/workflow-demo-win.gif" alt="Workflow Demo" />
+</p>
+
+---
+
+## 为什么选择 Oh My Resume？
+
+这个领域已有很多成熟产品，它们解决的问题不同。Oh My Resume 不试图复刻一个在线简历网站，而是选择另一条路线：**本地、自由、可编程、可被 Agent 深度协作。**
+
+| 能力 | 超级简历 | 老鱼简历 | OneResume | LaTeX 模板 | **Oh My Resume** |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Markdown 原生支持 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 本地文件管理 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Git 版本管理 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 长期维护迭代 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 配置驱动样式 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 自定义排版控制 | ❌ | ❌ | ❌ | ✅ | ✅ |
+| 自动生成 PDF | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 无平台锁定 | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 上下文理解优化 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agent 协作 | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+##  快速开始
+
+将本仓库安装为 Codex 或 Claude Code Skill：
 
 ```text
 oh-my-resume/
@@ -28,94 +76,126 @@ oh-my-resume/
   assets/oh-my-resume/
 ```
 
-## Use
+如果你的工具需要重启 Agent，安装后重启一次。
 
-Ask your agent:
+###  Agent工作流
 
-```text
+Oh My Resume 不是一个在线编辑器，它让 Agent 直接参与简历构建流程：
+
+```
 Use $oh-my-resume to create my resume PDF from resume.md.
 ```
 
-The Skill will:
+Agent 会自动完成：
 
-- check Node.js, XeLaTeX, and latexmk;
-- initialize a sample resume when needed;
-- render `resume.md` to `resume.pdf`;
-- keep generated TeX and logs in `build/`;
-- report the exact input and output paths.
+- 检查 Node.js、XeLaTeX、latexmk 环境；
+- 读取 Markdown 简历内容；
+- 根据配置生成对应样式；
+- 渲染 PDF；
+- 输出生成路径和构建信息。
 
-Direct CLI usage is also available:
+调试模式：
 
-```bash
-node assets/oh-my-resume/scripts/cli.js doctor
-node assets/oh-my-resume/scripts/cli.js pdf resume.md
 ```
-
-## Debug Preview
-
-For repeated editing:
-
-```text
 Use $oh-my-resume to debug resume.md.
 ```
 
-The debug page opens locally with:
+可以启动本地预览环境，快速调整内容和样式。
 
-- Markdown editor on the left;
-- PDF preview on the right;
-- `Render` button to save Markdown and regenerate PDF;
-- `Style` button for fonts, heading sizes, tag colors, margins, and photo sizing;
-- automatic shutdown after the browser tab closes.
+### Windows 首次使用
 
-Direct command:
+Windows 用户第一次生成 PDF 前，建议先准备本地 TeX 环境：
 
-```bash
-node assets/oh-my-resume/scripts/cli.js debug resume.md
+```bat
+cd assets\oh-my-resume
+install.bat
 ```
 
-## Markdown Rules
+`install.bat` 会调用 `scripts\install.ps1`，刷新当前进程可见的 TeX 路径，保存 `OMR_TEX_PATH` 供后续终端使用，并执行 `node scripts\cli.js doctor`。脚本会优先复用已安装的 MiKTeX 或 TeX Live。
 
-Use normal Markdown plus a few resume-friendly conventions:
+PowerShell / CI 可以直接运行：
 
-```yaml
----
-name: 文艺倾年
-theme: classic
-avatar:
-contacts:
-  - 电话：155-0000-0000 | 邮箱：[hello@example.com](mailto:hello@example.com) | 城市：不限
-  - 主页：[example.com](https://example.com) | GitHub：[github.com/example](https://github.com/example)
----
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -PersistUserEnv -VerifyPdf
 ```
+---
+## Markdown 格式
+
+Oh My Resume 使用 Markdown 作为唯一事实源。
+
+示例：
 
 ```md
-## 教育经历
+### 项目名称`标签` <right>2025年01月 - 2025年08月</right>
 
-### 示例大学 | 软件工程 | 硕士`双一流` `GPA 3.8/4.0` <time>2024年09月 - 2027年06月</time>
-
-## 项目经历
-
-### 智能任务平台 | 分布式调度系统`开源` `高并发` <time>2025年01月 - 2025年08月</time>
-技术栈：Java、MySQL、Netty、gRPC
-
-- 使用 **事件驱动架构** 重构任务提交链路。
-- 基于分片策略提升集群吞吐并降低尾延迟。
+- <logo>alibaba</logo> 一级要点
+  - 二级补充
+    - 三级细节
 ```
 
-Style tokens:
+支持：
 
-- `#` top-level title
-- `##` section title
-- `###` resume entry
-- `` `tag` `` badge
-- `<time>...</time>` right-aligned entry date
-- `**text**` strong text
-- `[text](url)` link
-- any `字段：内容` line under an entry is rendered as a normal field line
+- `##` 表示简历模块。
+- `###` 表示经历条目。
+- `` `标签` `` 会渲染为 Tag。
+- `<right>...</right>` 会渲染为右侧时间。
+- `-`、`  -`、`    -` 会分别渲染为一级、二级、三级列表。
+- `**重点**` 会加粗。
+- `[文本](链接)` 会保留为可点击链接。
+- 单独一行的 `***` 会渲染为灰黑色块分割线。
+- `<logo>alibaba</logo>` 会渲染为与文字基线对齐的企业 Logo。
 
-## Configuration
+内置 key：`alibaba`、`alibaba-cloud`、`bytedance`、`baidu`、`huawei`、
+`meituan`、`xiaomi`、`kuaishou`、`alipay`、`taobao`、`apple`、`google`。
+另支持中国移动：`china-mobile`。
 
-Simple style overrides live in `omr.config.json`:
+AI 与互联网品牌还包括：`tongyi-lab`、`pinduoduo`、`xiaohongshu`、
+`tencent`、`kimi`、`deepseek`、`trae`、`github`。
+
+自定义图片可直接写入 Markdown（PNG/JPG）：
+
+```md
+<logo src="logos/my-company.png">My Company</logo>
+```
+
+需要多次使用时，可以在 `omr.config.json` 注册短名称：
+
+```json
+{
+  "logos": {
+    "my-company": "logos/my-company.png"
+  }
+}
+```
+
+之后使用 `<logo>my-company</logo>`。图片路径相对于简历 Markdown 文件。
+
+页眉学校 Logo 使用独立字段。可以选择内置预设：
+
+```yaml
+schoolLogo: <school-logo>uestc</school-logo>
+```
+
+也可以直接填写相对于 Markdown 的图片路径：
+
+```yaml
+schoolLogo: school-logo/my-school.png
+```
+
+内置学校 key 包括 `uestc`、`peking-university`、`southeast-university`、
+`northwestern-polytechnical-university`。原有 `logo: logo.png` 继续兼容。
+
+---
+##  配置系统
+
+所有视觉参数均通过`omr.config.json`控制。
+
+包括：字体、页边距、行间距、主题颜色、图片尺寸等
+
+样式设置支持将当前配置导出为单个 JSON 文件。"导入并替换"会完整替换
+当前文件夹中的 `omr.config.json`。
+
+示例：
 
 ```json
 {
@@ -127,45 +207,104 @@ Simple style overrides live in `omr.config.json`:
     },
     "lengths": {
       "omrPageMarginLeft": "8mm",
-      "omrPhotoWidth": "2.15cm",
-      "omrPhotoHeight": "2.55cm",
-      "omrHeaderGap": "6mm"
+      "omrPhotoWidth": "2.35cm",
+      "omrPhotoHeight": "2.75cm",
+      "omrInlineLogoHeight": "1em",
+      "omrHeaderNameGap": "0.41em",
+      "omrNameMarginTop": "0em",
+      "omrNameMarginBottom": "0.41em",
+      "omrContactMarginTop": "0.1em",
+      "omrContactMarginBottom": "0.1em",
+      "omrLogoMarginTop": "0mm",
+      "omrLogoMarginBottom": "0mm",
+      "omrSectionAfter": "0.54em",
+      "omrDividerGap": "0.3em"
     },
     "fonts": {
       "omrBodyFont": "TeX Gyre Termes",
-      "omrCJKMainFont": "Songti SC"
+      "omrCJKMainFont": "Kaiti SC"
     },
     "sizes": {
-      "omrBodyFontSize": "10pt",
-      "omrSectionFontSize": "12pt",
-      "omrEntryFontSize": "10pt"
+      "omrBodyFontSize": "11.2pt",
+      "omrBodyLineHeight": "14.5pt",
+      "omrNameFontSize": "16.9pt",
+      "omrNameLineHeight": "19pt",
+      "omrContactFontSize": "10pt",
+      "omrContactLineHeight": "13pt",
+      "omrSectionFontSize": "12.1pt",
+      "omrEntryFontSize": "10.5pt"
     }
+  },
+  "logos": {
+    "my-company": "logos/my-company.png"
   }
 }
 ```
 
-Advanced users can copy and edit `themes/classic.tex` after initialization.
+如果需要完全自定义主题，可以在初始化后复制并编辑 `themes/classic.tex`。
 
-## Requirements
+### 配置优先级
 
-The Skill checks these automatically:
+Oh My Resume 会优先读取当前工作目录的本地配置：
 
-- Node.js 18+
-- XeLaTeX
-- latexmk
+1. 命令行指定 `--config path/to/config.json`
 
-macOS:
+2. 当前目录 `omr.config.json`
+
+3. Skill 默认配置
+
+> 因此 Skill 更新不会覆盖你的当前简历样式。只要 `omr.config.json` 留在简历目录下，它就会优先覆盖内置推荐值。
+
+##  环境要求
+
+Skill 会自动检查：
+
+-  Node.js 18+
+-  XeLaTeX
+-  latexmk
+
+HTML 快速预览不依赖 TeX。`html-pdf` / 「HTML 导出 PDF」需要本机安装 Google Chrome、Microsoft Edge 或 Chromium；自动检测失败时可设置：
+
+```bash
+export OMR_HTML_PDF_BROWSER="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+```
+
+###   macOS
 
 ```bash
 brew install --cask mactex-no-gui
 ```
 
-Ubuntu/Debian:
+###   Windows
+
+- 安装 [MiKTeX Basic](https://miktex.org/download)，或安装 [TeX Live](https://tug.org/texlive/)
+- 安装 [Strawberry Perl](https://strawberryperl.com/)
+- 运行 `assets\oh-my-resume\install.bat`
+
+###   Ubuntu/Debian
 
 ```bash
 sudo apt-get install latexmk texlive-xetex texlive-lang-chinese
 ```
 
-## License
+---
+## Star History
 
-MIT
+<a href="https://www.star-history.com/?repos=itxaiohanglover%2Foh-my-resume&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&theme=dark&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=itxaiohanglover/oh-my-resume&type=date&legend=top-left&sealed_token=t0ppc2tOyb-1FU2smIV6wtC2SpG5rFBz9YVkrHND4iPoZ4E8_fokq0v5RTJHot2JRRfwUk65kRMX8YE5p_KwvcVH60zmLKb-joUIFhvGUgHbWm62Duw9ouMnQ9B_o47m1A8-DBvhHQ1KwIoTy8ZGmxxrYD7QauB0PhqwPzI-Qu_kCAqYX5UWy9KsEw1p" />
+ </picture>
+</a>
+
+---
+##  开源协议
+
+本项目采用 [MIT License](LICENSE) 开源许可证。
+
+---
+
+<p align="center">
+  <sub>Made with  by the open-source community</sub>
+</p>
