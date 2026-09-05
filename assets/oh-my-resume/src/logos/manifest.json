@@ -19,5 +19,9 @@
   { "id": "xiaohongshu", "label": "小红书", "file": "xiaohongshu.png", "source": "xiaohongshu", "color": "FF2442" },
   { "id": "tencent", "label": "腾讯", "file": "tencent.png", "source": "Tencent Media Resources", "color": "0052D9" },
   { "id": "kimi", "label": "Kimi", "file": "kimi.png", "source": "kimi", "color": "000000" },
-  { "id": "deepseek", "label": "DeepSeek", "file": "deepseek.png", "source": "deepseek", "color": "5786FE" }
+  { "id": "deepseek", "label": "DeepSeek", "file": "deepseek.png", "source": "deepseek", "color": "5786FE" },
+  { "id": "china-commserve", "label": "中国通服", "file": "china-commserve.png", "source": "China Communications Services", "color": "E60012" },
+  { "id": "huaxin-design", "label": "华信设计", "file": "huaxin-design.png", "source": "Huaxin Consulting & Design", "color": "E60012" },
+  { "id": "fault-diagnosis", "label": "工业故障诊断", "file": "fault-diagnosis.png", "source": "custom icon", "color": "40A0E0" },
+  { "id": "research-institute", "label": "研究所", "file": "research-institute.png", "source": "custom icon", "color": "2E8B8B" }
 ]
